@@ -1,0 +1,13 @@
+<div
+  #canvas
+  class="h-[340px] w-full bg-[#eef2f3] min-[641px]:h-[480px]"
+  aria-label="แผนที่เส้นทางจัดส่ง"
+></div>
+@if (failed()) {
+  <p
+    class="absolute bottom-10 left-3 z-[1000] max-w-[calc(100%-1.5rem)] rounded-lg bg-white p-3 text-sm text-red-700 shadow-md"
+    role="alert"
+  >
+    โหลดแผนที่ไม่สำเร็จ โปรดตรวจสอบอินเทอร์เน็ต
+  </p>
+}
