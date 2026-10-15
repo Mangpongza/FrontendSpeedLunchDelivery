@@ -1,0 +1,89 @@
+<div class="flex flex-row justify-between items-center mb-4">
+  <h1 class="text-2xl font-bold">จัดเส้นทางส่งอาหาร</h1>
+  <button class="btn btn-primary btn-lg" (click)="calculate()" [disabled]="loading()">
+    @if (loading()) {
+      <span class="loading loading-spinner"></span> กำลังคำนวณ...
+    } @else {
+      🛵 จัดเส้นทาง
+    }
+  </button>
+</div>
+
+@if (message()) {
+  <div class="alert alert-error mb-4"><span>{{ message() }}</span></div>
+}
+
+@if (plan()) {
+  <!-- สรุปค่าใช้จ่าย กำไร และเวลา -->
+  <div class="stats stats-vertical md:stats-horizontal shadow w-full mb-4">
+    <div class="stat">
+      <div class="stat-title">ไรเดอร์ / ออเดอร์ / กล่อง</div>
+      <div class="stat-value text-2xl">{{ plan()!.rider_count }} / {{ plan()!.total_orders }} / {{ plan()!.total_boxes }}</div>
+      <div class="stat-desc">ระยะทางรวม {{ plan()!.distance_km }} กม.</div>
+    </div>
+    <div class="stat">
+      <div class="stat-title">รายได้</div>
+      <div class="stat-value text-2xl">{{ plan()!.revenue }} ฿</div>
+      <div class="stat-desc">ต้นทุนอาหาร {{ plan()!.food_cost }} ฿</div>
+    </div>
+    <div class="stat">
+      <div class="stat-title">ค่าไรเดอร์</div>
+      <div class="stat-value text-2xl">{{ plan()!.delivery_cost }} ฿</div>
+      <div class="stat-desc">ค่าปรับส่งเลท {{ plan()!.late_penalty }} ฿</div>
+    </div>
+    <div class="stat">
+      <div class="stat-title">กำไร</div>
+      @if (plan()!.profit >= 0) {
+        <div class="stat-value text-2xl text-success">{{ plan()!.profit }} ฿</div>
+      } @else {
+        <div class="stat-value text-2xl text-error">{{ plan()!.profit }} ฿ (ขาดทุน)</div>
+      }
+      <div class="stat-desc">แผนครั้งที่ {{ plan()!.revision }} ของวันที่ {{ plan()!.delivery_date }}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-title">ส่งถึงคนสุดท้าย</div>
+      <div class="stat-value text-2xl">{{ time(plan()!.last_arrival_time) }} น.</div>
+      @if (plan()!.all_on_time) {
+        <div class="stat-desc text-success">ทันก่อน {{ time(plan()!.deadline_time) }} ทุกจุด</div>
+      } @else {
+        <div class="stat-desc text-error">เลท {{ plan()!.late_orders }} ออเดอร์</div>
+      }
+    </div>
+  </div>
+
+  <div class="alert alert-info mb-4">
+    <span>แผนที่แสดงเส้นทางแยกสีจะทำในรอบถัดไป ตอนนี้ดูเส้นทางแต่ละคนได้จากปุ่ม "ดูใน Google Maps"</span>
+  </div>
+
+  <!-- ใบงานไรเดอร์แต่ละคน แยกสี -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    @for (route of plan()!.routes; track route.route_id) {
+      <div class="card bg-base-100 shadow-sm border-l-8" [style.border-color]="color(route.rider_number)">
+        <div class="card-body">
+          <div class="flex flex-row justify-between items-center">
+            <h2 class="card-title">
+              <span class="badge text-white" [style.background-color]="color(route.rider_number)">คนที่ {{ route.rider_number }}</span>
+              {{ route.rider_name }}
+            </h2>
+            <a class="link link-primary" [routerLink]="['/rider', route.job_code]">{{ route.job_code }}</a>
+          </div>
+          <p class="text-sm">
+            {{ route.total_boxes }} กล่อง · {{ route.distance_km }} กม. · {{ route.duration_minutes }} นาที · ค่าส่ง {{ route.delivery_cost }} ฿
+          </p>
+          <ol class="list-decimal list-inside">
+            @for (stop of route.stops; track stop.stop_id) {
+              <li>{{ stop.customer_name }} ({{ stop.quantity }} กล่อง) ถึง {{ time(stop.arrival_time) }} น.</li>
+            }
+          </ol>
+          <div class="card-actions justify-end">
+            <a class="btn btn-sm btn-outline" [href]="route.navigation_url" target="_blank">ดูใน Google Maps</a>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+} @else {
+  <div class="alert alert-warning">
+    <span>วันนี้ยังไม่ได้จัดเส้นทาง กดปุ่ม "จัดเส้นทาง" เมื่ออาหารพร้อม (11:30 น.)</span>
+  </div>
+}
