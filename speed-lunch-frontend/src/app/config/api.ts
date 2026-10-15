@@ -4,5 +4,5 @@ import { Injectable } from '@angular/core';
   providedIn: 'root',
 })
 export class Api {
-  public readonly API_ENDPOINT: string = 'http://localhost:3000/api';
+  public readonly API_ENDPOINT: string = 'https://backend-speed-lunch-delivery.vercel.app/api';
 }

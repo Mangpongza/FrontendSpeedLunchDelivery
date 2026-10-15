@@ -108,6 +108,6 @@ export class Orders {
   // backend ตอบ error เป็น { error: "..." }
   showError(e: any) {
     this.isError.set(true);
-    this.message.set(e?.error?.error ?? 'เชื่อมต่อ backend ไม่ได้ (เปิด http://localhost:3000 หรือยัง?)');
+    this.message.set(e?.error?.error ?? 'เชื่อมต่อ backend ไม่ได้');
   }
 }
