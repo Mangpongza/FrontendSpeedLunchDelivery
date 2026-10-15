@@ -1,0 +1,28 @@
+import { inject, Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { lastValueFrom } from 'rxjs';
+import { Api } from '../../config/api';
+import { PlanGetResponse } from '../../model/plan-get-res';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class RouteApi {
+  http = inject(HttpClient);
+  api = inject(Api);
+  apiEndpoint = this.api.API_ENDPOINT;
+
+  // ปุ่ม "จัดเส้นทาง" (ส่ง {} = วันนี้ 11:30-12:30)
+  public async calculate() {
+    const url = `${this.apiEndpoint}/route/calculate`;
+    const response = await lastValueFrom(this.http.post(url, {}));
+    return response as PlanGetResponse;
+  }
+
+  // แผนล่าสุดของวันนี้
+  public async getLatestPlan() {
+    const url = `${this.apiEndpoint}/route/plans/latest`;
+    const response = await lastValueFrom(this.http.get(url));
+    return response as PlanGetResponse;
+  }
+}
