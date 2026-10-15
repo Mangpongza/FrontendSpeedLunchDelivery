@@ -1,0 +1,156 @@
+<div class="flex flex-row justify-between items-center mb-4">
+  <h1 class="text-2xl font-bold">Dashboard ({{ today }})</h1>
+  <button class="btn btn-sm" (click)="loadData()">รีเฟรช</button>
+</div>
+
+@if (message()) {
+  <div class="alert alert-error mb-4"><span>{{ message() }}</span></div>
+}
+
+<!-- ภาพรวมวันนี้ -->
+<div class="stats stats-vertical md:stats-horizontal shadow w-full mb-4 bg-base-100">
+  <div class="stat">
+    <div class="stat-title">ออเดอร์รอส่ง</div>
+    <div class="stat-value text-primary">{{ pending()?.total_orders ?? 0 }}</div>
+    <div class="stat-desc">รวม {{ pending()?.total_boxes ?? 0 }} กล่อง</div>
+  </div>
+  <div class="stat">
+    <div class="stat-title">ไรเดอร์ที่ต้องใช้อย่างน้อย</div>
+    <div class="stat-value text-secondary">{{ pending()?.min_riders_needed ?? 0 }}</div>
+    <div class="stat-desc">จากทั้งหมด {{ riders().length }} คน</div>
+  </div>
+  <div class="stat">
+    <div class="stat-title">ไรเดอร์ที่ได้ใบงานวันนี้</div>
+    <div class="stat-value">{{ busyRiders() }}</div>
+    <div class="stat-desc">ว่าง {{ riders().length - busyRiders() }} คน</div>
+  </div>
+  <div class="stat">
+    <div class="stat-title">เวลาส่ง</div>
+    <div class="stat-value text-2xl">11:30 – 12:30</div>
+    <div class="stat-desc">ต้องถึงลูกค้าภายใน 1 ชั่วโมง</div>
+  </div>
+</div>
+
+<div class="flex flex-col md:flex-row gap-4 mb-4">
+  <!-- แผนล่าสุดของวันนี้ -->
+  <div class="card bg-base-100 shadow-sm flex-1">
+    <div class="card-body">
+      <h2 class="card-title">แผนจัดส่งวันนี้</h2>
+      @if (latestPlan()) {
+        <p>
+          แผนครั้งที่ {{ latestPlan()!.revision }} · ไรเดอร์ {{ latestPlan()!.rider_count }} คน ·
+          {{ latestPlan()!.total_orders }} ออเดอร์ · {{ latestPlan()!.distance_km }} กม.
+        </p>
+        <div class="flex flex-row gap-6 my-2">
+          <div>
+            <div class="text-sm">กำไร</div>
+            @if (latestPlan()!.profit >= 0) {
+              <div class="text-2xl font-bold text-success">{{ latestPlan()!.profit }} ฿</div>
+            } @else {
+              <div class="text-2xl font-bold text-error">{{ latestPlan()!.profit }} ฿</div>
+            }
+          </div>
+          <div>
+            <div class="text-sm">ส่งถึงคนสุดท้าย</div>
+            <div class="text-2xl font-bold">{{ time(latestPlan()!.last_arrival_time) }} น.</div>
+          </div>
+        </div>
+        @if (latestPlan()!.all_on_time) {
+          <div class="badge badge-success">ส่งทันทุกจุด</div>
+        } @else {
+          <div class="badge badge-error">เลท {{ latestPlan()!.late_orders }} ออเดอร์</div>
+        }
+        <div class="card-actions justify-end">
+          <a class="btn btn-primary btn-sm" routerLink="/route-plan">ดูเส้นทาง</a>
+        </div>
+      } @else {
+        <p>วันนี้ยังไม่ได้จัดเส้นทาง</p>
+        <div class="card-actions justify-end">
+          <a class="btn btn-outline btn-sm" routerLink="/orders">เพิ่มออเดอร์</a>
+          <a class="btn btn-primary btn-sm" routerLink="/route-plan">ไปจัดเส้นทาง</a>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- ไรเดอร์ -->
+  <div class="card bg-base-100 shadow-sm flex-1">
+    <div class="card-body">
+      <h2 class="card-title">ไรเดอร์</h2>
+      <div class="overflow-x-auto">
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th>ชื่อ</th>
+              <th>เบอร์โทร</th>
+              <th>สถานะวันนี้</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (rider of riders(); track rider.id) {
+              <tr>
+                <td>{{ rider.name }}</td>
+                <td>{{ rider.phone }}</td>
+                <td>
+                  @if (rider.jobs_on_date > 0) {
+                    <span class="badge badge-primary">มีใบงาน</span>
+                  } @else {
+                    <span class="badge badge-ghost">ว่าง</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ประวัติแผน -->
+<div class="card bg-base-100 shadow-sm">
+  <div class="card-body">
+    <h2 class="card-title">ประวัติการจัดเส้นทาง</h2>
+    <div class="overflow-x-auto">
+      <table class="table table-zebra">
+        <thead>
+          <tr>
+            <th>วันที่</th>
+            <th>ครั้งที่</th>
+            <th>สถานะ</th>
+            <th>ไรเดอร์</th>
+            <th>ออเดอร์</th>
+            <th>ค่าไรเดอร์</th>
+            <th>กำไร</th>
+            <th>ส่งทัน</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (plan of plans(); track plan.id) {
+            <tr>
+              <td>{{ plan.delivery_date }}</td>
+              <td>{{ plan.revision }}</td>
+              <td>{{ plan.status }}</td>
+              <td>{{ plan.rider_count }}</td>
+              <td>{{ plan.total_orders }}</td>
+              <td>{{ plan.delivery_cost }} ฿</td>
+              <td>{{ plan.profit }} ฿</td>
+              <td>
+                @if (plan.all_on_time) {
+                  ✅
+                } @else {
+                  ❌ {{ plan.late_orders }}
+                }
+              </td>
+            </tr>
+          }
+          @if (plans().length === 0) {
+            <tr>
+              <td colspan="8" class="text-center">ยังไม่มีประวัติ</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
