@@ -1,0 +1,43 @@
+<div class="max-w-md mx-auto">
+  <h1 class="text-2xl font-bold mb-4">ใบงานไรเดอร์</h1>
+
+  <div class="flex flex-row gap-2 mb-4">
+    <input #codeInput type="text" class="input outline-0 flex-1" placeholder="เลขใบงาน เช่น JOB000001-01" [value]="code() ?? ''" (keyup.enter)="findJob(codeInput)" />
+    <button class="btn btn-primary" (click)="findJob(codeInput)">ดูใบงาน</button>
+  </div>
+
+  @if (message()) {
+    <div class="alert alert-error mb-4"><span>{{ message() }}</span></div>
+  }
+
+  @if (job()) {
+    <div class="card bg-base-100 shadow-sm">
+      <div class="card-body">
+        <h2 class="card-title">{{ job()!.job_code }}</h2>
+        <p>{{ job()!.rider_name }} · สถานะ {{ job()!.status }}</p>
+
+        <div class="text-center my-2">
+          <div class="text-5xl font-bold text-primary">{{ job()!.total_boxes }}</div>
+          <div>กล่องที่ต้องหยิบ · ออกจากร้าน {{ time(job()!.departure_time) }} น.</div>
+        </div>
+
+        <ul class="steps steps-vertical">
+          @for (stop of job()!.stops; track stop.stop_id) {
+            <li class="step step-primary" [attr.data-content]="stop.stop_sequence">
+              <div class="text-left">
+                <div class="font-bold">จุดที่ {{ stop.stop_sequence }}: ส่งคุณ {{ stop.customer_name }} ({{ stop.quantity }} กล่อง)</div>
+                <div class="text-sm">โทร {{ stop.phone }} · ถึงประมาณ {{ time(stop.arrival_time) }} น.</div>
+                @if (stop.address) {
+                  <div class="text-sm">{{ stop.address }}</div>
+                }
+              </div>
+            </li>
+          }
+          <li class="step" data-content="🏠">ส่งครบแล้วขับกลับร้าน</li>
+        </ul>
+
+        <a class="btn btn-primary btn-lg w-full mt-2" [href]="job()!.navigation_url" target="_blank">🗺️ เปิดแผนที่นำทาง</a>
+      </div>
+    </div>
+  }
+</div>
