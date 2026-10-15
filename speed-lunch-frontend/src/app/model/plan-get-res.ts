@@ -50,3 +50,6 @@ export interface RouteStop {
   latitude: number;
   longitude: number;
 }
+
+// แถวในประวัติแผน GET /route/plans (ไม่มี routes)
+export type PlanSummary = Omit<PlanGetResponse, 'routes'>;
