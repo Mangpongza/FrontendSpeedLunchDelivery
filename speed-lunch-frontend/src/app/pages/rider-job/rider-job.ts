@@ -1,6 +1,7 @@
 import { Component, inject, input, signal } from '@angular/core';
 import { JobApi } from '../../services/api/job-api';
 import { RiderRoute } from '../../model/plan-get-res';
+import { statusText } from '../../model/status-text';
 
 @Component({
   imports: [],
@@ -14,6 +15,7 @@ export class RiderJob {
   code = input<string>();
   job = signal<RiderRoute | undefined>(undefined);
   message = signal('');
+  statusText = statusText;
 
   ngOnInit() {
     if (this.code()) {

@@ -5,6 +5,7 @@ import { RiderApi } from '../../services/api/rider-api';
 import { PendingGetResponse } from '../../model/pending-get-res';
 import { PlanGetResponse, PlanSummary } from '../../model/plan-get-res';
 import { RiderGetResponse } from '../../model/rider-get-res';
+import { statusText } from '../../model/status-text';
 
 @Component({
   imports: [RouterModule],
@@ -22,6 +23,7 @@ export class Dashboard {
   latestPlan = signal<PlanGetResponse | undefined>(undefined);
   plans = signal<PlanSummary[]>([]);
   message = signal('');
+  statusText = statusText;
 
   ngOnInit() {
     this.loadData();

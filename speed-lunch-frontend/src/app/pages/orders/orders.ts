@@ -87,6 +87,9 @@ export class Orders {
   }
 
   async cancel(id: number) {
+    if (!confirm(`ต้องการยกเลิกออเดอร์ #${id} ใช่ไหม?`)) {
+      return;
+    }
     try {
       await this.orderApi.cancelOrder(id);
       this.showMessage(`ยกเลิกออเดอร์ #${id} แล้ว`);

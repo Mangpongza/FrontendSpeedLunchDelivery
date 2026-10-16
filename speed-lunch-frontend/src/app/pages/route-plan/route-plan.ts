@@ -32,6 +32,10 @@ export class RoutePlan {
   }
 
   async calculate() {
+    // จัดใหม่ = แผนเดิมถูกยกเลิก และไรเดอร์ได้เลขใบงานใหม่
+    if (this.plan() && !confirm('วันนี้จัดเส้นทางไปแล้ว ถ้าจัดใหม่ ใบงานเดิมของไรเดอร์ทุกคนจะถูกยกเลิกและได้เลขใบงานใหม่ ต้องการจัดใหม่ไหม?')) {
+      return;
+    }
     this.loading.set(true);
     this.message.set('');
     try {

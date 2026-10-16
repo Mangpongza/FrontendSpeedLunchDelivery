@@ -14,7 +14,13 @@
     <div class="card bg-base-100 shadow-sm">
       <div class="card-body">
         <h2 class="card-title">{{ job()!.job_code }}</h2>
-        <p>{{ job()!.rider_name }} · สถานะ {{ job()!.status }}</p>
+        <p>{{ job()!.rider_name }} · สถานะ {{ statusText(job()!.status) }}</p>
+
+        @if (job()!.status === 'cancelled') {
+          <div class="alert alert-error">
+            <span>ใบงานนี้ถูกยกเลิกแล้ว ร้านจัดเส้นทางใหม่ ห้ามออกส่งตามใบงานนี้ ให้ขอเลขใบงานใหม่จากร้าน</span>
+          </div>
+        }
 
         <div class="text-center my-2">
           <div class="text-5xl font-bold text-primary">{{ job()!.total_boxes }}</div>
@@ -36,7 +42,9 @@
           <li class="step" data-content="🏠">ส่งครบแล้วขับกลับร้าน</li>
         </ul>
 
-        <a class="btn btn-primary btn-lg w-full mt-2" [href]="job()!.navigation_url" target="_blank">🗺️ เปิดแผนที่นำทาง</a>
+        @if (job()!.status !== 'cancelled') {
+          <a class="btn btn-primary btn-lg w-full mt-2" [href]="job()!.navigation_url" target="_blank">🗺️ เปิดแผนที่นำทาง</a>
+        }
       </div>
     </div>
   }
