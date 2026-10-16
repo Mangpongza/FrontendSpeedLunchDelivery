@@ -25,13 +25,11 @@ export class RoutePlan {
     try {
       this.plan.set(await this.routeApi.getLatestPlan());
     } catch (e) {
-
       this.plan.set(undefined);
     }
   }
 
   async calculate() {
-
     if (this.plan() && !confirm('วันนี้จัดเส้นทางไปแล้ว ถ้าจัดใหม่ ใบงานเดิมของไรเดอร์ทุกคนจะถูกยกเลิกและได้เลขใบงานใหม่ ต้องการจัดใหม่ไหม?')) {
       return;
     }

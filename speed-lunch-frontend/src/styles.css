@@ -4,7 +4,6 @@
   themes: false;
 }
 
-/* ธีมสีฟีลไปรษณีย์ไทย: แดง-ขาว และน้ำเงินนิดๆ (ทำแบบ daisyUI theme generator) */
 @plugin "daisyui/theme" {
   name: "thaipost";
   default: true;

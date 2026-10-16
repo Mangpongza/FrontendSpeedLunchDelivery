@@ -34,7 +34,6 @@ export class Dashboard {
     try {
       this.pending.set(await this.routeApi.getPending());
       this.riders.set(await this.riderApi.getRiders());
-
       this.plans.set((await this.routeApi.getPlans()).slice(0, 7));
     } catch (e: any) {
       this.message.set(e?.error?.error ?? 'เชื่อมต่อ backend ไม่ได้');
@@ -42,7 +41,6 @@ export class Dashboard {
     try {
       this.latestPlan.set(await this.routeApi.getLatestPlan());
     } catch (e) {
-
       this.latestPlan.set(undefined);
     }
   }

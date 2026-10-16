@@ -36,7 +36,6 @@ export class Orders {
     try {
       const res = await this.orderApi.getOrders(this.today, 'pending');
       this.orders.set(res);
-
       this.selectedIds.set(this.selectedIds().filter((id) => res.some((o) => o.id === id)));
     } catch (e) {
       this.showError(e);
