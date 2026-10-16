@@ -1,85 +1,92 @@
-<h1 class="text-2xl font-bold mb-4">ออเดอร์วันนี้ ({{ today }})</h1>
+<div class="mb-4 rounded-t-xl border-b-4 border-[#183b78] bg-[#d71920] px-5 py-4 text-white shadow-sm">
+  <p class="text-xs uppercase tracking-[0.18em] opacity-80">Thailand Post · Same Day</p>
+  <h1 class="text-2xl font-bold">ออเดอร์วันนี้ ({{ today }})</h1>
+</div>
 
 @if (message() && isError()) {
-  <div class="alert alert-error mb-4"><span>{{ message() }}</span></div>
+  <div class="alert alert-error mb-4 rounded-xl shadow-sm"><span>{{ message() }}</span></div>
 } @else if (message()) {
-  <div class="alert alert-success mb-4"><span>{{ message() }}</span></div>
+  <div class="alert alert-success mb-4 rounded-xl shadow-sm"><span>{{ message() }}</span></div>
 }
 
-<div class="flex flex-col md:flex-row gap-4">
+<div class="flex flex-col gap-4 md:flex-row">
   <!-- ฟอร์มเพิ่มออเดอร์ -->
-  <div class="card bg-base-100 shadow-sm md:w-96">
+  <div class="card w-full rounded-xl border border-base-200 bg-base-100 shadow-sm md:w-96 md:flex-none">
     <div class="card-body">
-      <h2 class="card-title">เพิ่มออเดอร์</h2>
+      <div class="mb-1 flex items-center gap-3">
+        <div class="grid h-10 w-10 place-items-center rounded-xl bg-red-50 text-xl text-[#d71920]">＋</div>
+        <div>
+          <h2 class="card-title text-[#183b78]">เพิ่มออเดอร์</h2>
+          <p class="text-xs text-base-content/60">กรอกข้อมูลผู้รับเพื่อสร้างรายการจัดส่ง</p>
+        </div>
+      </div>
 
       <fieldset class="fieldset">
         <legend class="fieldset-legend">เบอร์โทร</legend>
         <div class="flex flex-row gap-2">
-          <input type="text" class="input outline-0" placeholder="0812345678" [(ngModel)]="phone" />
-          <button class="btn btn-outline" (click)="findCustomer()">ค้นหา</button>
+          <input type="text" class="input w-full outline-0 focus:border-[#183b78]" placeholder="0812345678" [(ngModel)]="phone" />
+          <button class="btn btn-outline border-[#183b78] text-[#183b78] hover:bg-[#183b78] hover:text-white" (click)="findCustomer()">ค้นหา</button>
         </div>
       </fieldset>
 
       <fieldset class="fieldset">
         <legend class="fieldset-legend">ชื่อลูกค้า</legend>
-        <input type="text" class="input outline-0 w-full" [(ngModel)]="name" />
+        <input type="text" class="input w-full outline-0 focus:border-[#183b78]" placeholder="ชื่อและนามสกุล" [(ngModel)]="name" />
       </fieldset>
 
       <fieldset class="fieldset">
         <legend class="fieldset-legend">ที่อยู่</legend>
-        <input type="text" class="input outline-0 w-full" [(ngModel)]="address" />
+        <input type="text" class="input w-full outline-0 focus:border-[#183b78]" placeholder="บ้านเลขที่ ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด" [(ngModel)]="address" />
       </fieldset>
 
       <div class="flex flex-row gap-2">
-        <fieldset class="fieldset">
+        <fieldset class="fieldset min-w-0 flex-1">
           <legend class="fieldset-legend">ละติจูด</legend>
-          <input type="number" step="0.0001" class="input outline-0" [(ngModel)]="latitude" />
+          <input type="number" step="0.0001" class="input w-full outline-0 focus:border-[#183b78]" [(ngModel)]="latitude" />
         </fieldset>
-        <fieldset class="fieldset">
+        <fieldset class="fieldset min-w-0 flex-1">
           <legend class="fieldset-legend">ลองจิจูด</legend>
-          <input type="number" step="0.0001" class="input outline-0" [(ngModel)]="longitude" />
+          <input type="number" step="0.0001" class="input w-full outline-0 focus:border-[#183b78]" [(ngModel)]="longitude" />
         </fieldset>
       </div>
 
       <fieldset class="fieldset">
-        <legend class="fieldset-legend">จำนวนกล่อง (สูงสุด 3)</legend>
-        <select class="select outline-0" [(ngModel)]="quantity">
+        <legend class="fieldset-legend">จำนวนกล่อง <span class="font-normal text-base-content/50">(สูงสุด 3)</span></legend>
+        <select class="select w-full outline-0 focus:border-[#183b78]" [(ngModel)]="quantity">
           <option [value]="1">1 กล่อง</option>
           <option [value]="2">2 กล่อง</option>
           <option [value]="3">3 กล่อง</option>
         </select>
       </fieldset>
 
-      <button class="btn btn-primary mt-2" (click)="addOrder()">บันทึกออเดอร์</button>
+      <button class="btn mt-2 w-full border-[#d71920] bg-[#d71920] text-white hover:border-[#ad1019] hover:bg-[#ad1019]" (click)="addOrder()">บันทึกออเดอร์&nbsp; →</button>
 
-      <div class="divider">ทดสอบระบบ</div>
+      <div class="divider my-3 text-xs text-base-content/50">ทดสอบระบบ</div>
       <div class="flex flex-row gap-2">
-        <input #amount type="number" class="input outline-0 w-24" value="20" min="1" max="30" />
-        <button class="btn btn-secondary" (click)="addRandom(amount)">สุ่มออเดอร์</button>
+        <input #amount type="number" class="input w-24 outline-0 focus:border-[#183b78]" value="20" min="1" max="30" />
+        <button class="btn flex-1 border-[#183b78] bg-[#183b78] text-white hover:border-[#102c60] hover:bg-[#102c60]" (click)="addRandom(amount)">สุ่มออเดอร์</button>
       </div>
     </div>
   </div>
 
   <!-- รายการออเดอร์รอส่ง -->
-  <div class="card bg-base-100 shadow-sm flex-1">
+  <div class="card min-w-0 flex-1 rounded-xl border border-base-200 bg-base-100 shadow-sm">
     <div class="card-body">
-      <div class="flex flex-row justify-between items-center">
-        <h2 class="card-title">รอส่ง {{ orders().length }} ออเดอร์ / {{ totalBoxes() }} กล่อง</h2>
-        <div class="flex flex-row gap-2">
-          @if (selectedIds().length > 0) {
-            <button class="btn btn-sm btn-error" (click)="cancelSelected()">ยกเลิกที่เลือก ({{ selectedIds().length }})</button>
-          }
-          <button class="btn btn-sm" (click)="loadOrders()">รีเฟรช</button>
+      <div class="mb-2 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+        <div>
+          <h2 class="card-title text-[#183b78]">รายการรอจัดส่ง</h2>
+          <div class="mt-1 flex items-center gap-2 text-sm text-base-content/60">
+            <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+            รอส่ง {{ orders().length }} ออเดอร์ / {{ totalBoxes() }} กล่อง
+          </div>
         </div>
+        <button class="btn btn-sm border-[#183b78] text-[#183b78] hover:bg-[#183b78] hover:text-white" (click)="loadOrders()">↻ &nbsp;รีเฟรช</button>
       </div>
+
       <div class="overflow-x-auto">
         <table class="table table-zebra">
           <thead>
-            <tr>
-              <th>
-                <input type="checkbox" class="checkbox checkbox-sm" aria-label="เลือกทั้งหมด"
-                  [checked]="isAllSelected()" (change)="toggleSelectAll()" />
-              </th>
+            <tr class="text-[#183b78]">
               <th>#</th>
               <th>ลูกค้า</th>
               <th>เบอร์โทร</th>
@@ -91,21 +98,21 @@
           <tbody>
             @for (order of orders(); track order.id) {
               <tr>
-                <td>
-                  <input type="checkbox" class="checkbox checkbox-sm" [attr.aria-label]="'เลือกออเดอร์ #' + order.id"
-                    [checked]="isSelected(order.id)" (change)="toggleSelect(order.id)" />
-                </td>
-                <td>{{ order.id }}</td>
-                <td>{{ order.customer_name }}</td>
+                <td class="font-semibold text-[#183b78]">{{ order.id }}</td>
+                <td class="font-medium">{{ order.customer_name }}</td>
                 <td>{{ order.customer_phone }}</td>
-                <td>{{ order.quantity }}</td>
+                <td><span class="badge badge-outline border-[#183b78] text-[#183b78]">{{ order.quantity }} กล่อง</span></td>
                 <td>{{ order.job_code ?? '-' }}</td>
                 <td><button class="btn btn-xs btn-error" (click)="cancel(order.id)">ยกเลิก</button></td>
               </tr>
             }
             @if (orders().length === 0) {
               <tr>
-                <td colspan="7" class="text-center">ยังไม่มีออเดอร์</td>
+                <td colspan="6" class="py-14 text-center">
+                  <div class="mx-auto mb-3 grid h-16 w-16 place-items-center rounded-2xl bg-[#f1f5fb] text-3xl">📦</div>
+                  <strong class="block text-[#183b78]">ยังไม่มีออเดอร์</strong>
+                  <span class="text-sm text-base-content/60">เพิ่มออเดอร์ใหม่จากแบบฟอร์มได้เลย</span>
+                </td>
               </tr>
             }
           </tbody>
