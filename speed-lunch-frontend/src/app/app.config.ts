@@ -6,7 +6,7 @@ import { routes } from './app.routes';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    // withComponentInputBinding() ให้รับ path param ด้วย input() ได้
+
     provideRouter(routes, withComponentInputBinding()),
     provideHttpClient(),
   ],

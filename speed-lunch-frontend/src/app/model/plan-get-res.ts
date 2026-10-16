@@ -38,7 +38,7 @@ export interface RiderRoute {
   status: string;
   departure_time: string;
   stops: RouteStop[];
-  instructions?: string[]; // มีเฉพาะตอนดึงใบงาน GET /jobs/:code
+  instructions?: string[];
 }
 
 export interface RouteStop {
@@ -54,5 +54,4 @@ export interface RouteStop {
   longitude: number;
 }
 
-// แถวในประวัติแผน GET /route/plans (ไม่มี routes)
 export type PlanSummary = Omit<PlanGetResponse, 'routes'>;

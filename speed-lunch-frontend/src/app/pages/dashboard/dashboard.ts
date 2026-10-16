@@ -34,7 +34,7 @@ export class Dashboard {
     try {
       this.pending.set(await this.routeApi.getPending());
       this.riders.set(await this.riderApi.getRiders());
-      // แสดงประวัติ 7 แผนล่าสุด
+
       this.plans.set((await this.routeApi.getPlans()).slice(0, 7));
     } catch (e: any) {
       this.message.set(e?.error?.error ?? 'เชื่อมต่อ backend ไม่ได้');
@@ -42,12 +42,11 @@ export class Dashboard {
     try {
       this.latestPlan.set(await this.routeApi.getLatestPlan());
     } catch (e) {
-      // 404 = วันนี้ยังไม่ได้จัดเส้นทาง
+
       this.latestPlan.set(undefined);
     }
   }
 
-  // ไรเดอร์ที่วันนี้ได้ใบงานแล้ว
   busyRiders() {
     return this.riders().filter((r) => r.jobs_on_date > 0).length;
   }

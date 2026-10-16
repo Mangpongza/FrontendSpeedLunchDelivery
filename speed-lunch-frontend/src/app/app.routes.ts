@@ -11,6 +11,6 @@ export const routes: Routes = [
   { path: 'route-plan', component: RoutePlan },
   { path: 'rider', component: RiderJob },
   { path: 'rider/:code', component: RiderJob },
-  //Wild Card Route for 404 request
+
   { path: '**', component: Pagenotfound },
 ];

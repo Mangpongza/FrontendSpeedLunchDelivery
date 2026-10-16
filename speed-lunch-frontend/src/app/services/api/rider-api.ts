@@ -12,7 +12,6 @@ export class RiderApi {
   api = inject(Api);
   apiEndpoint = this.api.API_ENDPOINT;
 
-  // รายชื่อไรเดอร์ + จำนวนใบงานวันนี้
   public async getRiders() {
     const url = `${this.apiEndpoint}/riders`;
     const response = await lastValueFrom(this.http.get(url));

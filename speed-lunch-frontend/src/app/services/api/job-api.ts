@@ -26,7 +26,6 @@ export class JobApi {
   api = inject(Api);
   apiEndpoint = this.api.API_ENDPOINT;
 
-  // ไรเดอร์กรอกเลขใบงานเพื่อดูใบงาน
   public async getJobByCode(code: string) {
     const url = `${this.apiEndpoint}/jobs/${code}`;
     const response = await lastValueFrom(this.http.get(url));

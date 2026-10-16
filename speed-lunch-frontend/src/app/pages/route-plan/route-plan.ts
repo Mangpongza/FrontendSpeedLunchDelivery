@@ -15,7 +15,6 @@ export class RoutePlan {
   loading = signal(false);
   message = signal('');
 
-  // สีเส้นทางไรเดอร์ คนที่ 1 แดง, 2 เขียว, 3 น้ำเงิน ...
   colors = ['#ef4444', '#22c55e', '#3b82f6', '#f59e0b', '#a855f7', '#ec4899', '#14b8a6', '#64748b', '#84cc16', '#f97316'];
 
   ngOnInit() {
@@ -26,13 +25,13 @@ export class RoutePlan {
     try {
       this.plan.set(await this.routeApi.getLatestPlan());
     } catch (e) {
-      // 404 = วันนี้ยังไม่ได้จัดเส้นทาง
+
       this.plan.set(undefined);
     }
   }
 
   async calculate() {
-    // จัดใหม่ = แผนเดิมถูกยกเลิก และไรเดอร์ได้เลขใบงานใหม่
+
     if (this.plan() && !confirm('วันนี้จัดเส้นทางไปแล้ว ถ้าจัดใหม่ ใบงานเดิมของไรเดอร์ทุกคนจะถูกยกเลิกและได้เลขใบงานใหม่ ต้องการจัดใหม่ไหม?')) {
       return;
     }
@@ -50,7 +49,6 @@ export class RoutePlan {
     return this.colors[(riderNumber - 1) % this.colors.length];
   }
 
-  // "11:42:00" -> "11:42"
   time(t: string) {
     return String(t).slice(0, 5);
   }

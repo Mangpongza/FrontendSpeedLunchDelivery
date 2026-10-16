@@ -1,4 +1,3 @@
-// แปลสถานะจาก backend เป็นภาษาไทย
 const STATUS_TEXT: { [status: string]: string } = {
   pending: 'รอส่ง',
   delivered: 'ส่งแล้ว',

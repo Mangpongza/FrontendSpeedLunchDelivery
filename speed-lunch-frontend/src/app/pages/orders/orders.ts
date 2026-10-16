@@ -12,17 +12,15 @@ import { OrderGetResponse } from '../../model/order-get-res';
 export class Orders {
   orderApi = inject(OrderApi);
 
-  // วันนี้ในรูปแบบ YYYY-MM-DD
   today = new Date().toLocaleDateString('en-CA');
   orders = signal<OrderGetResponse[]>([]);
-  // id ของออเดอร์ที่ติกเลือกไว้ (ยกเลิกทีละหลายรายการ)
+
   selectedIds = signal<number[]>([]);
 
-  // ฟอร์มกรอกข้อมูลลูกค้า
   name = signal('');
   phone = signal('');
   address = signal('');
-  // ยังไม่กรอก = null (input type=number ที่ว่างก็ได้ null)
+
   latitude = signal<number | null>(null);
   longitude = signal<number | null>(null);
   quantity = signal(1);
@@ -38,14 +36,13 @@ export class Orders {
     try {
       const res = await this.orderApi.getOrders(this.today, 'pending');
       this.orders.set(res);
-      // ตัดออเดอร์ที่ไม่อยู่ในรายการแล้วออกจากที่เลือกไว้
+
       this.selectedIds.set(this.selectedIds().filter((id) => res.some((o) => o.id === id)));
     } catch (e) {
       this.showError(e);
     }
   }
 
-  // ลูกค้าเก่า ใส่เบอร์โทรก็เจอ
   async findCustomer() {
     try {
       const customer = await this.orderApi.getCustomerByPhone(this.phone());
@@ -71,7 +68,7 @@ export class Orders {
       address: this.address(),
       latitude: this.latitude(),
       longitude: this.longitude(),
-      quantity: Number(this.quantity()), // select ส่งค่ามาเป็น string
+      quantity: Number(this.quantity()),
     };
     try {
       await this.orderApi.addQuickOrder(data);
@@ -131,7 +128,6 @@ export class Orders {
     this.selectedIds.set(this.isAllSelected() ? [] : this.orders().map((o) => o.id));
   }
 
-  // ยกเลิกทุกออเดอร์ที่ติกไว้ (backend ยกเลิกได้ทีละ 1 ออเดอร์)
   async cancelSelected() {
     const ids = this.selectedIds();
     if (ids.length === 0 || !confirm(`ต้องการยกเลิก ${ids.length} ออเดอร์ที่เลือก ใช่ไหม?`)) {
@@ -164,7 +160,6 @@ export class Orders {
     this.message.set(text);
   }
 
-  // backend ตอบ error เป็น { error: "..." }
   showError(e: any) {
     this.isError.set(true);
     this.message.set(e?.error?.error ?? 'เชื่อมต่อ backend ไม่ได้');
