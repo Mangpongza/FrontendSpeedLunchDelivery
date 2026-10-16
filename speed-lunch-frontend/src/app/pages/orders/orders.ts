@@ -15,6 +15,8 @@ export class Orders {
   // วันนี้ในรูปแบบ YYYY-MM-DD
   today = new Date().toLocaleDateString('en-CA');
   orders = signal<OrderGetResponse[]>([]);
+  // id ของออเดอร์ที่ติกเลือกไว้ (ยกเลิกทีละหลายรายการ)
+  selectedIds = signal<number[]>([]);
 
   // ฟอร์มกรอกข้อมูลลูกค้า
   name = signal('');
@@ -35,6 +37,8 @@ export class Orders {
     try {
       const res = await this.orderApi.getOrders(this.today, 'pending');
       this.orders.set(res);
+      // ตัดออเดอร์ที่ไม่อยู่ในรายการแล้วออกจากที่เลือกไว้
+      this.selectedIds.set(this.selectedIds().filter((id) => res.some((o) => o.id === id)));
     } catch (e) {
       this.showError(e);
     }
@@ -97,6 +101,50 @@ export class Orders {
     } catch (e) {
       this.showError(e);
     }
+  }
+
+  isSelected(id: number) {
+    return this.selectedIds().includes(id);
+  }
+
+  toggleSelect(id: number) {
+    if (this.isSelected(id)) {
+      this.selectedIds.set(this.selectedIds().filter((x) => x !== id));
+    } else {
+      this.selectedIds.set([...this.selectedIds(), id]);
+    }
+  }
+
+  isAllSelected() {
+    return this.orders().length > 0 && this.selectedIds().length === this.orders().length;
+  }
+
+  toggleSelectAll() {
+    this.selectedIds.set(this.isAllSelected() ? [] : this.orders().map((o) => o.id));
+  }
+
+  // ยกเลิกทุกออเดอร์ที่ติกไว้ (backend ยกเลิกได้ทีละ 1 ออเดอร์)
+  async cancelSelected() {
+    const ids = this.selectedIds();
+    if (ids.length === 0 || !confirm(`ต้องการยกเลิก ${ids.length} ออเดอร์ที่เลือก ใช่ไหม?`)) {
+      return;
+    }
+    const failed: number[] = [];
+    for (const id of ids) {
+      try {
+        await this.orderApi.cancelOrder(id);
+      } catch (e) {
+        failed.push(id);
+      }
+    }
+    if (failed.length === 0) {
+      this.showMessage(`ยกเลิกแล้ว ${ids.length} ออเดอร์`);
+    } else {
+      this.isError.set(true);
+      this.message.set(`ยกเลิกได้ ${ids.length - failed.length} ออเดอร์ ไม่สำเร็จ: #${failed.join(', #')}`);
+    }
+    this.selectedIds.set(failed);
+    await this.loadOrders();
   }
 
   totalBoxes() {

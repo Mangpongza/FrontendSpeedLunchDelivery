@@ -65,12 +65,21 @@
     <div class="card-body">
       <div class="flex flex-row justify-between items-center">
         <h2 class="card-title">รอส่ง {{ orders().length }} ออเดอร์ / {{ totalBoxes() }} กล่อง</h2>
-        <button class="btn btn-sm" (click)="loadOrders()">รีเฟรช</button>
+        <div class="flex flex-row gap-2">
+          @if (selectedIds().length > 0) {
+            <button class="btn btn-sm btn-error" (click)="cancelSelected()">ยกเลิกที่เลือก ({{ selectedIds().length }})</button>
+          }
+          <button class="btn btn-sm" (click)="loadOrders()">รีเฟรช</button>
+        </div>
       </div>
       <div class="overflow-x-auto">
         <table class="table table-zebra">
           <thead>
             <tr>
+              <th>
+                <input type="checkbox" class="checkbox checkbox-sm" aria-label="เลือกทั้งหมด"
+                  [checked]="isAllSelected()" (change)="toggleSelectAll()" />
+              </th>
               <th>#</th>
               <th>ลูกค้า</th>
               <th>เบอร์โทร</th>
@@ -82,6 +91,10 @@
           <tbody>
             @for (order of orders(); track order.id) {
               <tr>
+                <td>
+                  <input type="checkbox" class="checkbox checkbox-sm" [attr.aria-label]="'เลือกออเดอร์ #' + order.id"
+                    [checked]="isSelected(order.id)" (change)="toggleSelect(order.id)" />
+                </td>
                 <td>{{ order.id }}</td>
                 <td>{{ order.customer_name }}</td>
                 <td>{{ order.customer_phone }}</td>
@@ -92,7 +105,7 @@
             }
             @if (orders().length === 0) {
               <tr>
-                <td colspan="6" class="text-center">ยังไม่มีออเดอร์</td>
+                <td colspan="7" class="text-center">ยังไม่มีออเดอร์</td>
               </tr>
             }
           </tbody>
