@@ -1,51 +1,52 @@
-<div class="max-w-md mx-auto">
-  <h1 class="text-2xl font-bold mb-4">ใบงานไรเดอร์</h1>
+<div class="rider-page">
+  <header class="rider-heading">
+    <div><p>ส่งด่วนมื้อเที่ยง</p><h1>งานจัดส่งของไรเดอร์</h1></div>
+    @if (job() || rider()) { <button class="btn btn-sm" (click)="clear()">เปลี่ยนไรเดอร์</button> }
+  </header>
 
-  <div class="flex flex-row gap-2 mb-4">
-    <input #codeInput type="text" class="input outline-0 flex-1" placeholder="เลขใบงาน เช่น JOB000001-01" [value]="code() ?? ''" (keyup.enter)="findJob(codeInput)" />
-    <button class="btn btn-primary" (click)="findJob(codeInput)">ดูใบงาน</button>
-  </div>
+  <form class="rider-search" (ngSubmit)="findRider()">
+    <label for="rider-id">รหัสไรเดอร์</label>
+    <div class="search-row">
+      <input id="rider-id" name="riderId" class="input" type="text" inputmode="numeric" placeholder="เช่น 5" [(ngModel)]="riderId" [disabled]="loading()" />
+      <button class="btn btn-primary" type="submit" [disabled]="loading()">{{ loading() ? 'กำลังโหลด...' : 'ดูงานวันนี้' }}</button>
+    </div>
+    <small>กรอกรหัสไรเดอร์เพื่อดูใบงานในแผนล่าสุดของวันนี้</small>
+  </form>
 
-  @if (message()) {
-    <div class="alert alert-error mb-4"><span>{{ message() }}</span></div>
+  @if (message()) { <div class="alert alert-error" role="alert">{{ message() }}</div> }
+  @if (searched() && !job()) {
+    <div class="empty-state"><h2>{{ rider()?.name }}</h2><p>ยังไม่มีใบงานในแผนล่าสุดของวันนี้</p></div>
   }
 
-  @if (job()) {
-    <div class="card bg-base-100 shadow-sm">
-      <div class="card-body">
-        <h2 class="card-title">{{ job()!.job_code }}</h2>
-        <p>{{ job()!.rider_name }} · สถานะ {{ statusText(job()!.status) }}</p>
-
-        @if (job()!.status === 'cancelled') {
-          <div class="alert alert-error">
-            <span>ใบงานนี้ถูกยกเลิกแล้ว ร้านจัดเส้นทางใหม่ ห้ามออกส่งตามใบงานนี้ ให้ขอเลขใบงานใหม่จากร้าน</span>
+  @if (job(); as work) {
+    <section class="job-heading">
+      <div><h2>{{ work.rider_name }}</h2><p>ใบงาน {{ work.job_code }}</p></div>
+      <span class="badge badge-outline">{{ statusText(work.status) }}</span>
+    </section>
+    @if (work.status === 'cancelled') {
+      <div class="alert alert-error">ใบงานถูกยกเลิกแล้ว กรุณาค้นด้วยรหัสไรเดอร์เพื่อดูงานล่าสุด</div>
+    } @else {
+      <section class="job-layout">
+        <div class="job-details">
+          <a class="btn btn-primary map-button" [href]="work.navigation_url" target="_blank" rel="noopener noreferrer">เปิดเส้นทางทั้งหมดใน Google Maps</a>
+          <div class="job-summary">
+            <div><small>ข้าวกล่องที่ต้องหยิบ</small><strong>{{ work.total_boxes }} กล่อง</strong></div>
+            <div><small>จุดส่ง</small><strong>{{ work.stops.length }} จุด</strong></div>
+            <div><small>ระยะทาง</small><strong>{{ work.distance_km }} กม.</strong></div>
+            <div><small>เวลาโดยประมาณ</small><strong>{{ work.duration_minutes }} นาที</strong></div>
           </div>
-        }
-
-        <div class="text-center my-2">
-          <div class="text-5xl font-bold text-primary">{{ job()!.total_boxes }}</div>
-          <div>กล่องที่ต้องหยิบ · ออกจากร้าน {{ time(job()!.departure_time) }} น.</div>
+          <p class="departure">ออกจากร้าน {{ time(work.departure_time) }} น.</p>
+          <h3>ลำดับการจัดส่ง</h3>
+          @for (stop of work.stops; track stop.stop_id) {
+            <article class="stop-card">
+              <div class="stop-heading"><span class="stop-number">{{ stop.stop_sequence }}</span><h4>{{ stop.customer_name }}</h4><b>{{ stop.quantity }} กล่อง</b></div>
+              <p>{{ stop.address || 'ไม่ได้ระบุที่อยู่' }}</p>
+              <p>ถึงประมาณ {{ time(stop.arrival_time) }} น. · {{ statusText(stop.status) }}</p>
+              <div class="stop-actions"><a [href]="'tel:' + stop.phone">โทร {{ stop.phone }}</a><a class="btn btn-sm btn-outline" [href]="navigation(stop)" target="_blank" rel="noopener noreferrer">นำทางไปจุดนี้</a></div>
+            </article>
+          } @empty { <p>ใบงานนี้ไม่มีจุดส่ง</p> }
         </div>
-
-        <ul class="steps steps-vertical">
-          @for (stop of job()!.stops; track stop.stop_id) {
-            <li class="step step-primary" [attr.data-content]="stop.stop_sequence">
-              <div class="text-left">
-                <div class="font-bold">จุดที่ {{ stop.stop_sequence }}: ส่งคุณ {{ stop.customer_name }} ({{ stop.quantity }} กล่อง)</div>
-                <div class="text-sm">โทร {{ stop.phone }} · ถึงประมาณ {{ time(stop.arrival_time) }} น.</div>
-                @if (stop.address) {
-                  <div class="text-sm">{{ stop.address }}</div>
-                }
-              </div>
-            </li>
-          }
-          <li class="step" data-content="">ส่งครบแล้วขับกลับร้าน</li>
-        </ul>
-
-        @if (job()!.status !== 'cancelled') {
-          <a class="btn btn-primary btn-lg w-full mt-2" [href]="job()!.navigation_url" target="_blank">เปิดแผนที่นำทาง</a>
-        }
-      </div>
-    </div>
+      </section>
+    }
   }
 </div>

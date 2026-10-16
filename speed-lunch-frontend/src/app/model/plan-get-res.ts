@@ -1,4 +1,5 @@
 export interface PlanGetResponse {
+  shop?: { shop_latitude: number; shop_longitude: number };
   id: number;
   delivery_date: string;
   revision: number;
@@ -21,6 +22,8 @@ export interface PlanGetResponse {
 }
 
 export interface RiderRoute {
+  rider_id: number;
+  shop?: { shop_latitude: number; shop_longitude: number };
   route_id: number;
   job_code: string;
   rider_number: number;

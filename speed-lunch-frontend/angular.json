@@ -42,7 +42,6 @@
           "builder": "@angular/build:application",
           "options": {
             "browser": "src/main.ts",
-            "allowedCommonJsDependencies": ["leaflet"],
             "outputPath": {
               "base": "dist/speed-lunch-frontend",
               "browser": ""
@@ -55,7 +54,6 @@
               }
             ],
             "styles": [
-              "node_modules/leaflet/dist/leaflet.css",
               "src/styles.css"
             ]
           },
@@ -64,7 +62,7 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "700kB",
+                  "maximumWarning": "500kB",
                   "maximumError": "1MB"
                 },
                 {

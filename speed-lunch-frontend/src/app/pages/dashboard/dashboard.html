@@ -112,6 +112,7 @@
         <table class="table table-sm">
           <thead>
             <tr>
+              <th>ID ไรเดอร์</th>
               <th>ชื่อ</th>
               <th>เบอร์โทร</th>
               <th>สถานะวันนี้</th>
@@ -121,6 +122,7 @@
           <tbody>
             @for (rider of riders(); track rider.id) {
               <tr>
+                <td class="font-semibold">{{ rider.id }}</td>
                 <td>{{ rider.name }}</td>
                 <td>{{ rider.phone }}</td>
                 <td>
