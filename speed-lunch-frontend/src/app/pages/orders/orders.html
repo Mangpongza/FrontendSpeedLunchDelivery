@@ -39,16 +39,10 @@
         <input type="text" class="input w-full outline-0 focus:border-[#183b78]" placeholder="บ้านเลขที่ ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด" [(ngModel)]="address" />
       </fieldset>
 
-      <div class="flex flex-row gap-2">
-        <fieldset class="fieldset min-w-0 flex-1">
-          <legend class="fieldset-legend">ละติจูด</legend>
-          <input type="number" step="0.0001" class="input w-full outline-0 focus:border-[#183b78]" [(ngModel)]="latitude" />
-        </fieldset>
-        <fieldset class="fieldset min-w-0 flex-1">
-          <legend class="fieldset-legend">ลองจิจูด</legend>
-          <input type="number" step="0.0001" class="input w-full outline-0 focus:border-[#183b78]" [(ngModel)]="longitude" />
-        </fieldset>
-      </div>
+      <fieldset class="fieldset">
+        <legend class="fieldset-legend">ตำแหน่งบ้านลูกค้า</legend>
+        <app-location-picker [(latitude)]="latitude" [(longitude)]="longitude"></app-location-picker>
+      </fieldset>
 
       <fieldset class="fieldset">
         <legend class="fieldset-legend">จำนวนกล่อง <span class="font-normal text-base-content/50">(สูงสุด 3)</span></legend>

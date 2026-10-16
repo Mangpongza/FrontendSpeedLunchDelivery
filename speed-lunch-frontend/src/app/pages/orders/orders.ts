@@ -2,9 +2,10 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { OrderApi } from '../../services/api/order-api';
 import { OrderGetResponse } from '../../model/order-get-res';
+import { LocationPicker } from '../../components/location-picker/location-picker';
 
 @Component({
-  imports: [FormsModule],
+  imports: [FormsModule, LocationPicker],
   selector: 'app-orders',
   styleUrl: './orders.css',
   templateUrl: './orders.html',
@@ -22,8 +23,9 @@ export class Orders {
   name = signal('');
   phone = signal('');
   address = signal('');
-  latitude = signal(16.2462);
-  longitude = signal(103.2501);
+  // ยังไม่ปักหมุด = undefined
+  latitude = signal<number | undefined>(undefined);
+  longitude = signal<number | undefined>(undefined);
   quantity = signal(1);
 
   message = signal('');
@@ -59,6 +61,11 @@ export class Orders {
   }
 
   async addOrder() {
+    if (this.latitude() === undefined || this.longitude() === undefined) {
+      this.isError.set(true);
+      this.message.set('กรุณาคลิกบนแผนที่เพื่อปักหมุดบ้านลูกค้า');
+      return;
+    }
     const data = {
       name: this.name(),
       phone: this.phone(),
@@ -73,6 +80,8 @@ export class Orders {
       this.name.set('');
       this.phone.set('');
       this.address.set('');
+      this.latitude.set(undefined);
+      this.longitude.set(undefined);
       this.quantity.set(1);
       await this.loadOrders();
     } catch (e) {
