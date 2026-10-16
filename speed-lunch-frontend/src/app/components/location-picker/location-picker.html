@@ -1,6 +1,6 @@
 <div #map class="relative z-0 h-64 w-full rounded-lg border border-base-300"></div>
 @if (latitude() !== undefined && longitude() !== undefined) {
-  <p class="text-sm mt-1">📍 ปักหมุดแล้ว ห่างร้าน {{ distanceKm() }} กม.</p>
+  <p class="text-sm mt-1">ปักหมุดแล้ว ห่างร้าน {{ distanceKm() }} กม.</p>
   @if (distanceKm() > radiusKm) {
     <p class="text-sm text-error">อยู่นอกรัศมีให้บริการ {{ radiusKm }} กม. บันทึกไม่ได้</p>
   }
