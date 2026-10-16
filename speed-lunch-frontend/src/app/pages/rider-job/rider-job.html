@@ -39,11 +39,11 @@
               </div>
             </li>
           }
-          <li class="step" data-content="🏠">ส่งครบแล้วขับกลับร้าน</li>
+          <li class="step" data-content="">ส่งครบแล้วขับกลับร้าน</li>
         </ul>
 
         @if (job()!.status !== 'cancelled') {
-          <a class="btn btn-primary btn-lg w-full mt-2" [href]="job()!.navigation_url" target="_blank">🗺️ เปิดแผนที่นำทาง</a>
+          <a class="btn btn-primary btn-lg w-full mt-2" [href]="job()!.navigation_url" target="_blank">เปิดแผนที่นำทาง</a>
         }
       </div>
     </div>
