@@ -5,4 +5,5 @@ export interface CustomerGetResponse {
   address: string;
   latitude: number;
   longitude: number;
+  distance_km?: number;
 }

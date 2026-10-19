@@ -1,0 +1,378 @@
+<div class="mb-4 flex flex-row items-center justify-between rounded-t-xl border-b-4 border-[#183b78] bg-[#d71920] px-5 py-4 text-white shadow-sm">
+  <div>
+    <p class="text-xs uppercase tracking-[0.18em] opacity-80">ส่งด่วนมื้อเที่ยง</p>
+    <h1 class="text-2xl font-bold">จัดการข้อมูลลูกค้า</h1>
+  </div>
+  <button class="btn btn-sm border-0 bg-white text-[#183b78] hover:bg-red-50" (click)="loadCustomers()">
+    ↻ &nbsp;รีเฟรช
+  </button>
+</div>
+
+@if (message() && isError()) {
+  <div class="alert alert-error mb-4 rounded-xl shadow-sm"><span>{{ message() }}</span></div>
+} @else if (message()) {
+  <div class="alert alert-success mb-4 rounded-xl shadow-sm"><span>{{ message() }}</span></div>
+}
+
+<div class="flex flex-col gap-4 md:flex-row">
+  <!-- Left Side: Form & Search Tools -->
+  <div class="flex w-full flex-col gap-4 md:w-96 md:flex-none">
+    <!-- Customer Form Card -->
+    <div class="card w-full rounded-xl border border-base-200 bg-base-100 shadow-sm">
+      <div class="card-body">
+        <div class="mb-1 flex items-center gap-3">
+          <div class="grid h-10 w-10 place-items-center rounded-xl bg-red-50 text-xl text-[#d71920]">
+            {{ isEditing() ? '✎' : '👤' }}
+          </div>
+          <div>
+            <h2 class="card-title text-[#183b78]">{{ isEditing() ? 'แก้ไขข้อมูลลูกค้า' : 'เพิ่มลูกค้าใหม่' }}</h2>
+            <p class="text-xs text-base-content/60">
+              {{ isEditing() ? 'กำลังแก้ไขลูกค้ารหัส #' + editingId() : 'บันทึกข้อมูลลูกค้าพร้อมพิกัด GPS' }}
+            </p>
+          </div>
+        </div>
+
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend">ชื่อ - นามสกุล <span class="text-error">*</span></legend>
+          <input
+            type="text"
+            class="input w-full outline-0 focus:border-[#183b78]"
+            placeholder="เช่น สมชาย ใจดี"
+            [(ngModel)]="name"
+          />
+        </fieldset>
+
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend">เบอร์โทรศัพท์ <span class="text-error">*</span></legend>
+          <input
+            type="text"
+            class="input w-full outline-0 focus:border-[#183b78]"
+            placeholder="เช่น 0812345678"
+            [(ngModel)]="phone"
+          />
+        </fieldset>
+
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend">ที่อยู่ / จุดสังเกต</legend>
+          <input
+            type="text"
+            class="input w-full outline-0 focus:border-[#183b78]"
+            placeholder="บ้านเลขที่ หอพัก ถนน แขวง/ตำบล"
+            [(ngModel)]="address"
+          />
+        </fieldset>
+
+        <fieldset class="fieldset">
+          <div class="flex items-center justify-between">
+            <legend class="fieldset-legend">พิกัด GPS <span class="text-error">*</span></legend>
+            <button class="btn btn-ghost btn-xs text-[#183b78]" type="button" (click)="fillMsuCoordinates()">
+              📍 พิกัด มมส.
+            </button>
+          </div>
+          <div class="flex flex-row gap-2">
+            <input
+              type="number"
+              step="any"
+              class="input w-full outline-0 focus:border-[#183b78]"
+              placeholder="ละติจูด (Lat)"
+              [(ngModel)]="latitude"
+            />
+            <input
+              type="number"
+              step="any"
+              class="input w-full outline-0 focus:border-[#183b78]"
+              placeholder="ลองจิจูด (Lng)"
+              [(ngModel)]="longitude"
+            />
+          </div>
+        </fieldset>
+
+        <div class="mt-2 flex flex-col gap-2">
+          <button
+            class="btn w-full border-[#d71920] bg-[#d71920] text-white hover:border-[#ad1019] hover:bg-[#ad1019]"
+            (click)="saveCustomer()"
+          >
+            {{ isEditing() ? 'บันทึกการแก้ไข' : 'บันทึกข้อมูลลูกค้า' }} &nbsp;→
+          </button>
+
+          @if (isEditing()) {
+            <button class="btn btn-outline border-base-300 text-base-content/70 hover:bg-base-200" (click)="cancelEdit()">
+              ยกเลิกการแก้ไข
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Search & Filter Card (Requirement 2.2 & 2.3) -->
+    <div class="card w-full rounded-xl border border-base-200 bg-base-100 shadow-sm">
+      <div class="card-body">
+        <div class="mb-1 flex items-center gap-3">
+          <div class="grid h-10 w-10 place-items-center rounded-xl bg-blue-50 text-xl text-[#183b78]">🔍</div>
+          <div>
+            <h2 class="card-title text-[#183b78]">ค้นหาลูกค้า</h2>
+            <p class="text-xs text-base-content/60">ค้นหาตามชื่อ หรือ ค้นหาในรัศมีรอบพิกัด</p>
+          </div>
+        </div>
+
+        <!-- 1. ค้นหาจากส่วนหนึ่งของชื่อ หรือ นามสกุล -->
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend">1. ค้นหาจากชื่อ หรือ เบอร์โทร</legend>
+          <div class="flex flex-row gap-2">
+            <input
+              type="text"
+              class="input w-full outline-0 focus:border-[#183b78]"
+              placeholder="พิมพ์ชื่อ นามสกุล หรือเบอร์"
+              [(ngModel)]="searchKeyword"
+              (keyup.enter)="searchByNameOrPhone()"
+            />
+            <button
+              class="btn border-[#183b78] bg-[#183b78] text-white hover:border-[#102c60] hover:bg-[#102c60]"
+              (click)="searchByNameOrPhone()"
+            >
+              ค้นหา
+            </button>
+          </div>
+        </fieldset>
+
+        <div class="divider my-2 text-xs text-base-content/50">หรือค้นหาตามระยะทาง</div>
+
+        <!-- 2. ค้นหาในระยะ 1 กม. (ตามโจทย์อาจารย์) -->
+        <fieldset class="fieldset">
+          <div class="flex items-center justify-between">
+            <legend class="fieldset-legend">2. ค้นหาลูกค้าในรัศมี (กม.)</legend>
+            <button class="btn btn-ghost btn-xs text-[#183b78]" type="button" (click)="fillNearbyMsu()">
+              📍 ร้าน มมส.
+            </button>
+          </div>
+          <div class="mb-2 flex flex-row gap-2">
+            <input
+              type="number"
+              step="any"
+              class="input w-full outline-0 focus:border-[#183b78]"
+              placeholder="ละติจูด"
+              [(ngModel)]="nearbyLat"
+            />
+            <input
+              type="number"
+              step="any"
+              class="input w-full outline-0 focus:border-[#183b78]"
+              placeholder="ลองจิจูด"
+              [(ngModel)]="nearbyLng"
+            />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button
+              class="btn btn-sm border-[#183b78] bg-[#183b78] text-white hover:border-[#102c60] hover:bg-[#102c60]"
+              (click)="searchNearby(1)"
+            >
+              📍 ในระยะ 1 กม.
+            </button>
+            <button
+              class="btn btn-sm btn-outline border-[#183b78] text-[#183b78] hover:bg-[#183b78] hover:text-white"
+              (click)="searchNearby(2)"
+            >
+              📍 ในระยะ 2 กม.
+            </button>
+          </div>
+        </fieldset>
+
+        @if (activeFilter() !== 'all') {
+          <button class="btn btn-sm btn-ghost mt-2 w-full text-error" (click)="resetFilter()">
+            ✕ ล้างการค้นหา (แสดงทั้งหมด)
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Side: Customer List Table -->
+  <div class="card min-w-0 flex-1 rounded-xl border border-base-200 bg-base-100 shadow-sm">
+    <div class="card-body">
+      <div class="mb-2 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 class="card-title text-[#183b78]">รายชื่อลูกค้า</h2>
+            <span class="badge badge-outline border-[#183b78] text-[#183b78]">
+              {{ customers().length }} คน
+            </span>
+          </div>
+          <div class="mt-1 flex items-center gap-2 text-sm text-base-content/60">
+            @if (activeFilter() === 'all') {
+              <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+              <span>แสดงลูกค้าทั้งหมดในระบบ</span>
+            } @else if (activeFilter() === 'search') {
+              <span class="h-2 w-2 rounded-full bg-blue-500"></span>
+              <span>ผลการค้นหา: "{{ searchKeyword() }}"</span>
+            } @else if (activeFilter() === 'nearby') {
+              <span class="h-2 w-2 rounded-full bg-amber-500"></span>
+              <span>ลูกค้าในระยะ {{ nearbyRadius() }} กม. จากพิกัดที่กำหนด</span>
+            }
+          </div>
+        </div>
+
+        @if (activeFilter() !== 'all') {
+          <button class="btn btn-sm border-base-300 bg-base-200" (click)="resetFilter()">
+            แสดงทั้งหมด
+          </button>
+        }
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="table table-zebra">
+          <thead>
+            <tr class="text-[#183b78]">
+              <th>#ID</th>
+              <th>ชื่อลูกค้า</th>
+              <th>เบอร์โทร</th>
+              <th>ที่อยู่ / จุดสังเกต</th>
+              <th>พิกัด GPS</th>
+              @if (activeFilter() === 'nearby') {
+                <th>ระยะห่าง</th>
+              }
+              <th class="text-right">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of customers(); track c.id) {
+              <tr [class.bg-red-50]="editingId() === c.id">
+                <td class="font-semibold text-[#183b78]">#{{ c.id }}</td>
+                <td class="font-medium">
+                  <div class="flex items-center gap-2">
+                    <span>{{ c.name }}</span>
+                    @if (editingId() === c.id) {
+                      <span class="badge badge-xs badge-warning">กำลังแก้ไข</span>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <a [href]="'tel:' + c.phone" class="link-hover text-base-content hover:text-[#d71920]">
+                    {{ c.phone }}
+                  </a>
+                </td>
+                <td class="max-w-[200px] truncate text-xs text-base-content/80" [title]="c.address">
+                  {{ c.address || '-' }}
+                </td>
+                <td>
+                  <button
+                    class="btn btn-ghost btn-xs gap-1 font-mono text-[11px] text-[#183b78]"
+                    (click)="openGoogleMaps(c.latitude, c.longitude)"
+                    title="คลิกเพื่อเปิด Google Maps"
+                  >
+                    📍 {{ c.latitude | number: '1.4-4' }}, {{ c.longitude | number: '1.4-4' }}
+                  </button>
+                </td>
+                @if (activeFilter() === 'nearby') {
+                  <td>
+                    <span class="badge badge-sm badge-info font-mono">
+                      {{ c.distance_km ?? 0 }} กม.
+                    </span>
+                  </td>
+                }
+                <td class="text-right">
+                  <div class="flex items-center justify-end gap-1">
+                    <button
+                      class="btn btn-ghost btn-xs text-[#183b78] hover:bg-blue-50"
+                      (click)="viewOrders(c)"
+                      title="ดูประวัติการสั่งซื้อ"
+                    >
+                      ประวัติ
+                    </button>
+                    <button
+                      class="btn btn-ghost btn-xs text-[#183b78] hover:bg-blue-50"
+                      (click)="startEdit(c)"
+                      title="แก้ไขข้อมูลลูกค้า"
+                    >
+                      แก้ไข
+                    </button>
+                    <button
+                      class="btn btn-ghost btn-xs text-error hover:bg-red-50"
+                      (click)="deleteCustomer(c)"
+                      title="ลบข้อมูลลูกค้า"
+                    >
+                      ลบ
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+            @if (customers().length === 0 && !isLoading()) {
+              <tr>
+                <td [attr.colspan]="activeFilter() === 'nearby' ? 7 : 6" class="py-14 text-center">
+                  <div class="mx-auto mb-3 grid h-16 w-16 place-items-center rounded-2xl bg-[#f1f5fb] text-3xl">👥</div>
+                  <strong class="block text-[#183b78]">ไม่พบข้อมูลลูกค้า</strong>
+                  <span class="text-sm text-base-content/60">
+                    {{ activeFilter() !== 'all' ? 'ลองปรับเงื่อนไขการค้นหา หรือเพิ่มลูกค้าใหม่' : 'เพิ่มลูกค้าใหม่จากแบบฟอร์มด้านซ้าย' }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Order History Modal -->
+@if (isModalOpen()) {
+  <div class="modal modal-open">
+    <div class="modal-box max-w-2xl rounded-2xl">
+      <div class="flex items-center justify-between border-b pb-3">
+        <div>
+          <h3 class="text-lg font-bold text-[#183b78]">ประวัติการสั่งซื้อ</h3>
+          <p class="text-xs text-base-content/60">
+            คุณ {{ selectedCustomer()?.name }} (เบอร์โทร: {{ selectedCustomer()?.phone }})
+          </p>
+        </div>
+        <button class="btn btn-circle btn-ghost btn-sm" (click)="closeModal()">✕</button>
+      </div>
+
+      <div class="py-4">
+        @if (customerOrders().length === 0) {
+          <div class="py-8 text-center text-sm text-base-content/60">
+            ยังไม่มีประวัติการสั่งซื้อสำหรับลูกค้ารายนี้
+          </div>
+        } @else {
+          <div class="overflow-x-auto">
+            <table class="table table-sm">
+              <thead>
+                <tr class="text-[#183b78]">
+                  <th>#ออเดอร์</th>
+                  <th>วันที่สั่ง</th>
+                  <th>จำนวน</th>
+                  <th>สถานะ</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (o of customerOrders(); track o.id) {
+                  <tr>
+                    <td class="font-semibold text-[#183b78]">#{{ o.id }}</td>
+                    <td>{{ o.order_date }}</td>
+                    <td>{{ o.quantity }} กล่อง</td>
+                    <td>
+                      <span
+                        class="badge badge-sm"
+                        [class.badge-success]="o.status === 'delivered'"
+                        [class.badge-warning]="o.status === 'pending'"
+                        [class.badge-error]="o.status === 'cancelled'"
+                      >
+                        {{ o.status }}
+                      </span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+
+      <div class="modal-action">
+        <button class="btn btn-sm border-[#183b78] bg-[#183b78] text-white" (click)="closeModal()">
+          ปิดหน้าต่าง
+        </button>
+      </div>
+    </div>
+  </div>
+}
