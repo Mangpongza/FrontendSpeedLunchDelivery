@@ -1,12 +1,66 @@
-import { Component, effect, inject, input, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, effect, inject, input, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import * as L from 'leaflet';
 import { JobApi } from '../../services/api/job-api';
 import { RiderRoute, RouteStop } from '../../model/plan-get-res';
 import { RiderGetResponse } from '../../model/rider-get-res';
 import { statusText } from '../../model/status-text';
 
 @Component({
-  imports: [FormsModule],
+  selector: 'app-rider-map',
+  template: '<div #map class="rider-map" aria-label="แผนที่จุดส่งตามลำดับ"></div>',
+  styles: '.rider-map { height: 440px; width: 100%; z-index: 0; } @media(max-width:640px){.rider-map{height:340px}}',
+})
+export class RiderMap implements AfterViewInit, OnDestroy {
+  job = input.required<RiderRoute>();
+  mapElement = viewChild.required<ElementRef<HTMLDivElement>>('map');
+  private map?: L.Map;
+  private layers?: L.LayerGroup;
+
+  constructor() {
+    effect(() => { const job = this.job(); if (this.map) this.draw(job); });
+  }
+
+  ngAfterViewInit() {
+    this.map = L.map(this.mapElement().nativeElement);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors', maxZoom: 19,
+    }).addTo(this.map);
+    this.layers = L.layerGroup().addTo(this.map);
+    this.draw(this.job());
+  }
+
+  private draw(job: RiderRoute) {
+    this.layers!.clearLayers();
+    const points: L.LatLngTuple[] = [];
+    if (job.shop) {
+      const shop: L.LatLngTuple = [Number(job.shop.shop_latitude), Number(job.shop.shop_longitude)];
+      points.push(shop);
+      L.circleMarker(shop, { radius: 9, color: '#d71920', fillOpacity: 1 })
+        .bindTooltip('ร้าน', { permanent: true }).addTo(this.layers!);
+    }
+    for (const stop of [...job.stops].sort((a, b) => a.stop_sequence - b.stop_sequence)) {
+      const point: L.LatLngTuple = [Number(stop.latitude), Number(stop.longitude)];
+      if (!point.every(Number.isFinite)) continue;
+      points.push(point);
+      const popup = document.createElement('div');
+      popup.textContent = `จุดที่ ${stop.stop_sequence}: ${stop.customer_name} / ${stop.quantity} กล่อง / ${stop.address}`;
+      L.marker(point, { icon: L.divIcon({
+        className: '', iconSize: [32, 32], iconAnchor: [16, 16],
+        html: `<div style="background:#183b78;color:white;border:2px solid white;border-radius:50%;width:32px;height:32px;display:grid;place-items:center;font-weight:bold">${Number(stop.stop_sequence)}</div>`,
+      }) }).bindPopup(popup).addTo(this.layers!);
+    }
+    if (points.length) {
+      L.polyline(points, { color: '#183b78', weight: 3, dashArray: '7 7' }).addTo(this.layers!);
+      this.map!.fitBounds(L.latLngBounds(points).pad(0.2), { maxZoom: 16 });
+    } else this.map!.setView([16.2462, 103.2501], 14);
+  }
+
+  ngOnDestroy() { this.map?.remove(); }
+}
+
+@Component({
+  imports: [FormsModule, RiderMap],
   selector: 'app-rider-job',
   styleUrl: './rider-job.css',
   templateUrl: './rider-job.html',

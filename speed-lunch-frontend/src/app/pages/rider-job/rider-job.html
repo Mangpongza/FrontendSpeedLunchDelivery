@@ -27,8 +27,12 @@
       <div class="alert alert-error">ใบงานถูกยกเลิกแล้ว กรุณาค้นด้วยรหัสไรเดอร์เพื่อดูงานล่าสุด</div>
     } @else {
       <section class="job-layout">
-        <div class="job-details">
+        <div class="map-panel">
+          <app-rider-map [job]="work" />
+          <p class="map-note">หมุดตัวเลขคือลำดับส่ง เส้นประเชื่อมจุดส่งโดยประมาณ ใช้ Google Maps เพื่อนำทางตามถนน</p>
           <a class="btn btn-primary map-button" [href]="work.navigation_url" target="_blank" rel="noopener noreferrer">เปิดเส้นทางทั้งหมดใน Google Maps</a>
+        </div>
+        <div class="job-details">
           <div class="job-summary">
             <div><small>ข้าวกล่องที่ต้องหยิบ</small><strong>{{ work.total_boxes }} กล่อง</strong></div>
             <div><small>จุดส่ง</small><strong>{{ work.stops.length }} จุด</strong></div>
