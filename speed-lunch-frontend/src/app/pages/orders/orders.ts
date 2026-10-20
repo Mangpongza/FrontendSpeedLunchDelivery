@@ -1,10 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { LocationPicker } from '../../components/location-picker/location-picker';
 import { OrderApi } from '../../services/api/order-api';
 import { OrderGetResponse } from '../../model/order-get-res';
 
 @Component({
-  imports: [FormsModule],
+  imports: [FormsModule, LocationPicker],
   selector: 'app-orders',
   styleUrl: './orders.css',
   templateUrl: './orders.html',

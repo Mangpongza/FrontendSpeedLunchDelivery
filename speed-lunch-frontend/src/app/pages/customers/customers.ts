@@ -1,11 +1,12 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { LocationPicker } from '../../components/location-picker/location-picker';
 import { DecimalPipe } from '@angular/common';
 import { CustomerApi } from '../../services/api/customer-api';
 import { CustomerGetResponse } from '../../model/customer-get-res';
 
 @Component({
-  imports: [FormsModule, DecimalPipe],
+  imports: [FormsModule, DecimalPipe, LocationPicker],
   selector: 'app-customers',
   styleUrl: './customers.css',
   templateUrl: './customers.html',

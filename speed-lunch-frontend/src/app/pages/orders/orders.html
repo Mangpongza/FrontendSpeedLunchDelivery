@@ -40,6 +40,7 @@
 
       <fieldset class="fieldset">
         <legend class="fieldset-legend">ตำแหน่งบ้านลูกค้า</legend>
+        <app-location-picker [(latitude)]="latitude" [(longitude)]="longitude"></app-location-picker>
         <div class="flex flex-row gap-2">
           <input type="number" step="any" class="input w-full outline-0 focus:border-[#183b78]" placeholder="ละติจูด เช่น 16.2462" [(ngModel)]="latitude" />
           <input type="number" step="any" class="input w-full outline-0 focus:border-[#183b78]" placeholder="ลองจิจูด เช่น 103.2501" [(ngModel)]="longitude" />
