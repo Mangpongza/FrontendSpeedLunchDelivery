@@ -1,11 +1,13 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LocationPicker } from '../../components/location-picker/location-picker';
+import { RouterLink } from '@angular/router';
+import { CustomerApi } from '../../services/api/customer-api';
+import { CustomerGetResponse } from '../../model/customer-get-res';
 import { OrderApi } from '../../services/api/order-api';
 import { OrderGetResponse } from '../../model/order-get-res';
 
 @Component({
-  imports: [FormsModule, LocationPicker],
+  imports: [FormsModule, RouterLink],
   selector: 'app-orders',
   styleUrl: './orders.css',
   templateUrl: './orders.html',
@@ -18,19 +20,25 @@ export class Orders {
 
   selectedIds = signal<number[]>([]);
 
-  name = signal('');
-  phone = signal('');
-  address = signal('');
-
-  latitude = signal<number | null>(null);
-  longitude = signal<number | null>(null);
-  quantity = signal(1);
+    customerApi = inject(CustomerApi);
+  customers = signal<CustomerGetResponse[]>([]);
+  customerId = signal<number | null>(null);
+  keyword = signal('');
+  saving = signal(false);
+  loadingCustomers = signal(false);
+  selectedCustomer = computed(() => this.customers().find(c => c.id === Number(this.customerId())));
+  filteredCustomers = computed(() => {
+    const keyword = this.keyword().trim().toLowerCase();
+    return this.customers().filter(c => `${c.name} ${c.phone}`.toLowerCase().includes(keyword));
+  });
+quantity = signal(1);
 
   message = signal('');
   isError = signal(false);
 
   ngOnInit() {
     this.loadOrders();
+    this.loadCustomers();
   }
 
   async loadOrders() {
@@ -43,49 +51,43 @@ export class Orders {
     }
   }
 
-  async findCustomer() {
+    async loadCustomers() {
+    this.loadingCustomers.set(true);
     try {
-      const customer = await this.orderApi.getCustomerByPhone(this.phone());
-      this.name.set(customer.name);
-      this.address.set(customer.address);
-      this.latitude.set(Number(customer.latitude));
-      this.longitude.set(Number(customer.longitude));
-      this.showMessage(`พบลูกค้าเก่า: ${customer.name}`);
+      this.customers.set(await this.customerApi.getCustomers());
     } catch (e) {
-      this.showMessage('ไม่พบเบอร์นี้ เป็นลูกค้าใหม่ กรอกข้อมูลให้ครบ');
+      this.showError(e);
+    } finally {
+      this.loadingCustomers.set(false);
     }
   }
 
   async addOrder() {
-    if (this.latitude() === null || this.longitude() === null) {
-      this.isError.set(true);
-      this.message.set('กรุณากรอกละติจูดและลองจิจูดของบ้านลูกค้า');
+    if (this.saving()) return;
+    const customer = this.selectedCustomer();
+    const quantity = Number(this.quantity());
+    if (!customer) {
+      this.showError({ error: { error: 'กรุณาเลือกลูกค้าก่อนบันทึกออเดอร์' } });
       return;
     }
-    const data = {
-      name: this.name(),
-      phone: this.phone(),
-      address: this.address(),
-      latitude: this.latitude(),
-      longitude: this.longitude(),
-      quantity: Number(this.quantity()),
-    };
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 3) {
+      this.showError({ error: { error: 'จำนวนกล่องต้องอยู่ระหว่าง 1–3 กล่อง' } });
+      return;
+    }
+    this.saving.set(true);
     try {
-      await this.orderApi.addQuickOrder(data);
-      this.showMessage('เพิ่มออเดอร์แล้ว');
-      this.name.set('');
-      this.phone.set('');
-      this.address.set('');
-      this.latitude.set(null);
-      this.longitude.set(null);
+      await this.orderApi.createOrder(customer.id, quantity, this.today);
+      this.showMessage(`เพิ่มออเดอร์ของ ${customer.name} แล้ว`);
+      this.customerId.set(null);
       this.quantity.set(1);
       await this.loadOrders();
     } catch (e) {
       this.showError(e);
+    } finally {
+      this.saving.set(false);
     }
   }
-
-  async addRandom(amount: HTMLInputElement) {
+async addRandom(amount: HTMLInputElement) {
     try {
       await this.orderApi.addRandomOrders(Number(amount.value));
       this.showMessage(`สร้างออเดอร์ทดสอบ ${amount.value} รายการแล้ว`);

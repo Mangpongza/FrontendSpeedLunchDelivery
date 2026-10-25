@@ -9,6 +9,11 @@ import { CustomerGetResponse } from '../../model/customer-get-res';
   providedIn: 'root',
 })
 export class OrderApi {
+  public async createOrder(customerId: number, quantity: number, orderDate: string) {
+    return lastValueFrom(this.http.post(`${this.apiEndpoint}/order`, {
+      customer_id: customerId, quantity, order_date: orderDate,
+    }));
+  }
   http = inject(HttpClient);
   api = inject(Api);
   apiEndpoint = this.api.API_ENDPOINT;

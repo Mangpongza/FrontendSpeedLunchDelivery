@@ -16,38 +16,35 @@
         <div class="grid h-10 w-10 place-items-center rounded-xl bg-red-50 text-xl text-[#d71920]">＋</div>
         <div>
           <h2 class="card-title text-[#183b78]">เพิ่มออเดอร์</h2>
-          <p class="text-xs text-base-content/60">กรอกข้อมูลผู้รับเพื่อสร้างรายการจัดส่ง</p>
+          <p class="text-xs text-base-content/60">เลือกลูกค้าที่บันทึกไว้และระบุจำนวนกล่อง</p>
         </div>
       </div>
 
-      <fieldset class="fieldset">
-        <legend class="fieldset-legend">เบอร์โทร</legend>
-        <div class="flex flex-row gap-2">
-          <input type="text" class="input w-full outline-0 focus:border-[#183b78]" placeholder="0812345678" [(ngModel)]="phone" />
-          <button class="btn btn-outline border-[#183b78] text-[#183b78] hover:bg-[#183b78] hover:text-white" (click)="findCustomer()">ค้นหา</button>
+            <fieldset class="fieldset">
+        <legend class="fieldset-legend">เลือกลูกค้า</legend>
+        <input class="input w-full" placeholder="ค้นชื่อหรือเบอร์โทร" aria-label="ค้นหาลูกค้า" [(ngModel)]="keyword" />
+        <select class="select w-full" aria-label="เลือกลูกค้า" [(ngModel)]="customerId" [disabled]="loadingCustomers() || saving()">
+          <option [ngValue]="null">{{ loadingCustomers() ? 'กำลังโหลดลูกค้า...' : 'เลือกลูกค้า' }}</option>
+          @for (customer of filteredCustomers(); track customer.id) {
+            <option [ngValue]="customer.id">{{ customer.name }} · {{ customer.phone }}</option>
+          }
+        </select>
+        @if (!loadingCustomers() && filteredCustomers().length === 0) {
+          <p class="text-sm text-base-content/60">ไม่พบลูกค้า ลองค้นใหม่หรือเพิ่มข้อมูลลูกค้าก่อน</p>
+        }
+        <div class="flex gap-3 text-sm mt-2">
+          <a class="link text-[#183b78]" routerLink="/customers">เพิ่ม / แก้ไขข้อมูลลูกค้า</a>
+          <button type="button" class="link" (click)="loadCustomers()" [disabled]="loadingCustomers()">โหลดรายชื่อใหม่</button>
         </div>
       </fieldset>
-
-      <fieldset class="fieldset">
-        <legend class="fieldset-legend">ชื่อลูกค้า</legend>
-        <input type="text" class="input w-full outline-0 focus:border-[#183b78]" placeholder="ชื่อและนามสกุล" [(ngModel)]="name" />
-      </fieldset>
-
-      <fieldset class="fieldset">
-        <legend class="fieldset-legend">ที่อยู่</legend>
-        <input type="text" class="input w-full outline-0 focus:border-[#183b78]" placeholder="บ้านเลขที่ ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด" [(ngModel)]="address" />
-      </fieldset>
-
-      <fieldset class="fieldset">
-        <legend class="fieldset-legend">ตำแหน่งบ้านลูกค้า</legend>
-        <app-location-picker [(latitude)]="latitude" [(longitude)]="longitude"></app-location-picker>
-        <div class="flex flex-row gap-2">
-          <input type="number" step="any" class="input w-full outline-0 focus:border-[#183b78]" placeholder="ละติจูด เช่น 16.2462" [(ngModel)]="latitude" />
-          <input type="number" step="any" class="input w-full outline-0 focus:border-[#183b78]" placeholder="ลองจิจูด เช่น 103.2501" [(ngModel)]="longitude" />
+      @if (selectedCustomer(); as customer) {
+        <div class="rounded-lg bg-base-200 p-3 text-sm">
+          <p class="font-semibold">{{ customer.name }}</p>
+          <p>{{ customer.phone }}</p>
+          <p>{{ customer.address || 'ไม่ได้ระบุที่อยู่' }}</p>
         </div>
-      </fieldset>
-
-      <fieldset class="fieldset">
+      }
+<fieldset class="fieldset">
         <legend class="fieldset-legend">จำนวนกล่อง <span class="font-normal text-base-content/50">(สูงสุด 3)</span></legend>
         <select class="select w-full outline-0 focus:border-[#183b78]" [(ngModel)]="quantity">
           <option [value]="1">1 กล่อง</option>
@@ -56,7 +53,7 @@
         </select>
       </fieldset>
 
-      <button class="btn mt-2 w-full border-[#d71920] bg-[#d71920] text-white hover:border-[#ad1019] hover:bg-[#ad1019]" (click)="addOrder()">บันทึกออเดอร์&nbsp; →</button>
+      <button class="btn mt-2 w-full border-[#d71920] bg-[#d71920] text-white hover:border-[#ad1019] hover:bg-[#ad1019]" (click)="addOrder()" [disabled]="saving() || loadingCustomers() || !selectedCustomer()">{{ saving() ? 'กำลังบันทึก...' : 'บันทึกออเดอร์' }}</button>
 
       <div class="divider my-3 text-xs text-base-content/50">ทดสอบระบบ</div>
       <div class="flex flex-row gap-2">
