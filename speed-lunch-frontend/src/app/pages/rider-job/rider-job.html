@@ -5,7 +5,7 @@
       <h1>งานจัดส่งของไรเดอร์</h1>
     </div>
     @if (job() || rider()) {
-      <button class="btn btn-sm" (click)="clear()">เปลี่ยนไรเดอร์</button>
+      <button class="btn btn-sm" (click)="clear()" [disabled]="actionPending()">เปลี่ยนไรเดอร์</button>
     }
   </header>
 
@@ -20,15 +20,43 @@
         inputmode="numeric"
         placeholder="เช่น 5"
         [(ngModel)]="riderId"
-        [disabled]="loading()"
+        [disabled]="loading() || actionPending()"
       />
-      <button class="btn btn-primary" type="submit" [disabled]="loading()">
+      <button class="btn btn-primary" type="submit" [disabled]="loading() || actionPending()">
         {{ loading() ? 'กำลังโหลด...' : 'ดูงานวันนี้' }}
       </button>
     </div>
     <small>กรอกรหัสไรเดอร์เพื่อดูใบงานในแผนล่าสุดของวันนี้</small>
   </form>
 
+  <form class="rider-search" (ngSubmit)="loadJob(jobCode)">
+    <label for="job-code">หรือค้นด้วยเลขใบงาน</label>
+    <div class="search-row">
+      <input id="job-code" name="jobCode" class="input" type="text" placeholder="JOB000001-01"
+        [(ngModel)]="jobCode" [disabled]="loading() || actionPending()" autocomplete="off" />
+      <button class="btn btn-outline" type="submit" [disabled]="loading() || actionPending()">ดูใบงาน</button>
+    </div>
+  </form>
+
+  <section class="rider-search">
+    @if (loggedRider(); as account) {
+      <div class="search-row">
+        <p>เข้าสู่ระบบ: {{ account.name }} (ID {{ account.id }})</p>
+        <button class="btn btn-sm btn-outline" (click)="logout()" [disabled]="actionPending()">ออกจากระบบ</button>
+      </div>
+    } @else {
+      <form (ngSubmit)="login()">
+        <label for="rider-phone">เข้าสู่ระบบเพื่ออัปเดตงาน</label>
+        <div class="search-row">
+          <input id="rider-phone" name="loginPhone" class="input" type="tel" placeholder="เบอร์โทรไรเดอร์"
+            [(ngModel)]="loginPhone" [disabled]="loginPending()" autocomplete="tel" />
+          <button class="btn btn-primary" type="submit" [disabled]="loginPending()">{{ loginPending() ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ' }}</button>
+        </div>
+      </form>
+    }
+  </section>
+
+  @if (notice()) { <div class="alert alert-success mb-3" role="status">{{ notice() }}</div> }
   @if (message()) {
     <div class="alert alert-error" role="alert">{{ message() }}</div>
   }
@@ -47,6 +75,14 @@
       </div>
       <span class="badge badge-outline">{{ statusText(work.status) }}</span>
     </section>
+    @if (loggedRider() && !ownsJob()) {
+      <p class="alert alert-info mb-3">ใบงานนี้เป็นของไรเดอร์คนอื่น ดูรายละเอียดได้ แต่ไม่สามารถอัปเดตงานได้</p>
+    }
+    @if (ownsJob() && work.status === 'assigned') {
+      <button class="btn btn-primary mb-3" (click)="startJob()" [disabled]="actionPending()">
+        {{ actionPending() ? 'กำลังบันทึก...' : 'เริ่มออกส่ง' }}
+      </button>
+    }
     @if (work.status === 'cancelled') {
       <div class="alert alert-error">
         ใบงานถูกยกเลิกแล้ว กรุณาค้นด้วยรหัสไรเดอร์เพื่อดูงานล่าสุด
@@ -93,6 +129,9 @@
                 ><button class="btn btn-sm btn-outline" (click)="navigation(stop)">
                   นำทางไปจุดนี้
                 </button>
+                @if (ownsJob() && work.status === 'in_progress' && stop.status === 'pending') {
+                  <button class="btn btn-sm btn-success" (click)="deliver(stop)" [disabled]="actionPending()">ยืนยันส่งสำเร็จ</button>
+                }
               </div>
             </article>
           } @empty {

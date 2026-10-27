@@ -10,9 +10,13 @@ import { CustomerGetResponse } from '../../model/customer-get-res';
 })
 export class OrderApi {
   public async createOrder(customerId: number, quantity: number, orderDate: string) {
-    return lastValueFrom(this.http.post(`${this.apiEndpoint}/order`, {
-      customer_id: customerId, quantity, order_date: orderDate,
-    }));
+    return lastValueFrom(
+      this.http.post(`${this.apiEndpoint}/order`, {
+        customer_id: customerId,
+        quantity,
+        order_date: orderDate,
+      }),
+    );
   }
   http = inject(HttpClient);
   api = inject(Api);
@@ -20,7 +24,9 @@ export class OrderApi {
 
   public async getOrders(date: string, status: string) {
     const url = `${this.apiEndpoint}/order`;
-    const response = await lastValueFrom(this.http.get(url, { params: { date: date, status: status } }));
+    const response = await lastValueFrom(
+      this.http.get(url, { params: { date: date, status: status } }),
+    );
     return response as OrderGetResponse[];
   }
 
@@ -46,5 +52,14 @@ export class OrderApi {
     const url = `${this.apiEndpoint}/order/${id}`;
     const response = await lastValueFrom(this.http.delete(url));
     return response;
+  }
+
+  public async updateQuantity(id: number, quantity: number) {
+    return lastValueFrom(
+      this.http.put<{ affected_rows: number; needs_replan: boolean }>(
+        `${this.apiEndpoint}/order/${id}`,
+        { quantity },
+      ),
+    );
   }
 }

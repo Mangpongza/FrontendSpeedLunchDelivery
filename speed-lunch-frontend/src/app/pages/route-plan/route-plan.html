@@ -64,9 +64,7 @@
     </div>
   </div>
 
-  <div class="alert alert-info mb-4 rounded-xl border border-blue-200 shadow-sm">
-    <span>กด “ดูแผนที่เส้นทาง” เพื่อดูเส้นทางตามถนนของแต่ละใบงานในเว็บ</span>
-  </div>
+  <app-plan-overview-map [plan]="plan()!" [colors]="colors" />
 
   @if (selectedRoute(); as route) {
     <section

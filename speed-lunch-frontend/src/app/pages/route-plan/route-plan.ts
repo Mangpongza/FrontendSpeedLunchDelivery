@@ -4,9 +4,10 @@ import { RouteApi } from '../../services/api/route-api';
 import { PlanGetResponse, RiderRoute } from '../../model/plan-get-res';
 
 import { RoadMap } from '../../components/road-map/road-map';
+import { PlanOverviewMap } from '../../components/plan-overview-map/plan-overview-map';
 
 @Component({
-  imports: [RouterModule, RoadMap],
+  imports: [RouterModule, RoadMap, PlanOverviewMap],
   selector: 'app-route-plan',
   styleUrl: './route-plan.css',
   templateUrl: './route-plan.html',

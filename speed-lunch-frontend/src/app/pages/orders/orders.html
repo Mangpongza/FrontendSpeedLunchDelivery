@@ -1,40 +1,78 @@
-<div class="mb-4 rounded-t-xl border-b-4 border-[#183b78] bg-[#d71920] px-5 py-4 text-white shadow-sm">
+<div
+  class="mb-4 rounded-t-xl border-b-4 border-[#183b78] bg-[#d71920] px-5 py-4 text-white shadow-sm"
+>
   <p class="text-xs uppercase tracking-[0.18em] opacity-80">ส่งด่วนมื้อเที่ยง</p>
   <h1 class="text-2xl font-bold">ออเดอร์วันนี้ ({{ today }})</h1>
 </div>
 
 @if (message() && isError()) {
-  <div class="alert alert-error mb-4 rounded-xl shadow-sm"><span>{{ message() }}</span></div>
+  <div class="alert alert-error mb-4 rounded-xl shadow-sm">
+    <span>{{ message() }}</span>
+  </div>
 } @else if (message()) {
-  <div class="alert alert-success mb-4 rounded-xl shadow-sm"><span>{{ message() }}</span></div>
+  <div class="alert alert-success mb-4 rounded-xl shadow-sm">
+    <span>{{ message() }}</span>
+  </div>
+}
+
+@if (replanNeeded()) {
+  <div class="alert alert-warning mb-4" role="status">
+    <span>จำนวนกล่องในแผนเดิมยังไม่อัปเดต กรุณาจัดเส้นทางใหม่ก่อนให้ไรเดอร์ออกส่ง</span>
+    <a class="btn btn-sm" routerLink="/route-plan">ไปจัดเส้นทางใหม่</a>
+  </div>
 }
 
 <div class="flex flex-col gap-4 md:flex-row">
-  <div class="card w-full rounded-xl border border-base-200 bg-base-100 shadow-sm md:w-96 md:flex-none">
+  <div
+    class="card w-full rounded-xl border border-base-200 bg-base-100 shadow-sm md:w-96 md:flex-none"
+  >
     <div class="card-body">
       <div class="mb-1 flex items-center gap-3">
-        <div class="grid h-10 w-10 place-items-center rounded-xl bg-red-50 text-xl text-[#d71920]">＋</div>
+        <div class="grid h-10 w-10 place-items-center rounded-xl bg-red-50 text-xl text-[#d71920]">
+          ＋
+        </div>
         <div>
           <h2 class="card-title text-[#183b78]">เพิ่มออเดอร์</h2>
           <p class="text-xs text-base-content/60">เลือกลูกค้าที่บันทึกไว้และระบุจำนวนกล่อง</p>
         </div>
       </div>
 
-            <fieldset class="fieldset">
+      <fieldset class="fieldset">
         <legend class="fieldset-legend">เลือกลูกค้า</legend>
-        <input class="input w-full" placeholder="ค้นชื่อหรือเบอร์โทร" aria-label="ค้นหาลูกค้า" [(ngModel)]="keyword" />
-        <select class="select w-full" aria-label="เลือกลูกค้า" [(ngModel)]="customerId" [disabled]="loadingCustomers() || saving()">
-          <option [ngValue]="null">{{ loadingCustomers() ? 'กำลังโหลดลูกค้า...' : 'เลือกลูกค้า' }}</option>
+        <input
+          class="input w-full"
+          placeholder="ค้นชื่อหรือเบอร์โทร"
+          aria-label="ค้นหาลูกค้า"
+          [(ngModel)]="keyword"
+        />
+        <select
+          class="select w-full"
+          aria-label="เลือกลูกค้า"
+          [(ngModel)]="customerId"
+          [disabled]="loadingCustomers() || saving()"
+        >
+          <option [ngValue]="null">
+            {{ loadingCustomers() ? 'กำลังโหลดลูกค้า...' : 'เลือกลูกค้า' }}
+          </option>
           @for (customer of filteredCustomers(); track customer.id) {
             <option [ngValue]="customer.id">{{ customer.name }} · {{ customer.phone }}</option>
           }
         </select>
         @if (!loadingCustomers() && filteredCustomers().length === 0) {
-          <p class="text-sm text-base-content/60">ไม่พบลูกค้า ลองค้นใหม่หรือเพิ่มข้อมูลลูกค้าก่อน</p>
+          <p class="text-sm text-base-content/60">
+            ไม่พบลูกค้า ลองค้นใหม่หรือเพิ่มข้อมูลลูกค้าก่อน
+          </p>
         }
         <div class="flex gap-3 text-sm mt-2">
           <a class="link text-[#183b78]" routerLink="/customers">เพิ่ม / แก้ไขข้อมูลลูกค้า</a>
-          <button type="button" class="link" (click)="loadCustomers()" [disabled]="loadingCustomers()">โหลดรายชื่อใหม่</button>
+          <button
+            type="button"
+            class="link"
+            (click)="loadCustomers()"
+            [disabled]="loadingCustomers()"
+          >
+            โหลดรายชื่อใหม่
+          </button>
         </div>
       </fieldset>
       @if (selectedCustomer(); as customer) {
@@ -44,8 +82,10 @@
           <p>{{ customer.address || 'ไม่ได้ระบุที่อยู่' }}</p>
         </div>
       }
-<fieldset class="fieldset">
-        <legend class="fieldset-legend">จำนวนกล่อง <span class="font-normal text-base-content/50">(สูงสุด 3)</span></legend>
+      <fieldset class="fieldset">
+        <legend class="fieldset-legend">
+          จำนวนกล่อง <span class="font-normal text-base-content/50">(สูงสุด 3)</span>
+        </legend>
         <select class="select w-full outline-0 focus:border-[#183b78]" [(ngModel)]="quantity">
           <option [value]="1">1 กล่อง</option>
           <option [value]="2">2 กล่อง</option>
@@ -53,12 +93,30 @@
         </select>
       </fieldset>
 
-      <button class="btn mt-2 w-full border-[#d71920] bg-[#d71920] text-white hover:border-[#ad1019] hover:bg-[#ad1019]" (click)="addOrder()" [disabled]="saving() || loadingCustomers() || !selectedCustomer()">{{ saving() ? 'กำลังบันทึก...' : 'บันทึกออเดอร์' }}</button>
+      <button
+        class="btn mt-2 w-full border-[#d71920] bg-[#d71920] text-white hover:border-[#ad1019] hover:bg-[#ad1019]"
+        (click)="addOrder()"
+        [disabled]="saving() || loadingCustomers() || !selectedCustomer()"
+      >
+        {{ saving() ? 'กำลังบันทึก...' : 'บันทึกออเดอร์' }}
+      </button>
 
       <div class="divider my-3 text-xs text-base-content/50">ทดสอบระบบ</div>
       <div class="flex flex-row gap-2">
-        <input #amount type="number" class="input w-24 outline-0 focus:border-[#183b78]" value="20" min="1" max="30" />
-        <button class="btn flex-1 border-[#183b78] bg-[#183b78] text-white hover:border-[#102c60] hover:bg-[#102c60]" (click)="addRandom(amount)">สุ่มออเดอร์</button>
+        <input
+          #amount
+          type="number"
+          class="input w-24 outline-0 focus:border-[#183b78]"
+          value="20"
+          min="1"
+          max="30"
+        />
+        <button
+          class="btn flex-1 border-[#183b78] bg-[#183b78] text-white hover:border-[#102c60] hover:bg-[#102c60]"
+          (click)="addRandom(amount)"
+        >
+          สุ่มออเดอร์
+        </button>
       </div>
     </div>
   </div>
@@ -73,7 +131,12 @@
             รอส่ง {{ orders().length }} ออเดอร์ / {{ totalBoxes() }} กล่อง
           </div>
         </div>
-        <button class="btn btn-sm border-[#183b78] text-[#183b78] hover:bg-[#183b78] hover:text-white" (click)="loadOrders()">↻ &nbsp;รีเฟรช</button>
+        <button
+          class="btn btn-sm border-[#183b78] text-[#183b78] hover:bg-[#183b78] hover:text-white"
+          (click)="loadOrders()"
+        >
+          ↻ &nbsp;รีเฟรช
+        </button>
       </div>
 
       <div class="overflow-x-auto">
@@ -94,15 +157,70 @@
                 <td class="font-semibold text-[#183b78]">{{ order.id }}</td>
                 <td class="font-medium">{{ order.customer_name }}</td>
                 <td>{{ order.customer_phone }}</td>
-                <td><span class="badge badge-outline border-[#183b78] text-[#183b78]">{{ order.quantity }} กล่อง</span></td>
+                <td>
+                  @if (editingOrderId() === order.id) {
+                    <select
+                      class="select select-sm w-24"
+                      aria-label="แก้จำนวนกล่อง"
+                      [(ngModel)]="editingQuantity"
+                      [disabled]="updatingQuantity()"
+                    >
+                      <option [ngValue]="1">1 กล่อง</option>
+                      <option [ngValue]="2">2 กล่อง</option>
+                      <option [ngValue]="3">3 กล่อง</option>
+                    </select>
+                  } @else {
+                    <span class="badge badge-outline border-[#183b78] text-[#183b78]"
+                      >{{ order.quantity }} กล่อง</span
+                    >
+                  }
+                </td>
                 <td>{{ order.job_code ?? '-' }}</td>
-                <td><button class="btn btn-xs btn-error" (click)="cancel(order.id)">ยกเลิก</button></td>
+                <td>
+                  <div class="flex flex-wrap gap-2">
+                    @if (editingOrderId() === order.id) {
+                      <button
+                        class="btn btn-xs btn-primary"
+                        (click)="saveQuantity(order)"
+                        [disabled]="updatingQuantity()"
+                      >
+                        {{ updatingQuantity() ? 'กำลังบันทึก...' : 'บันทึก' }}
+                      </button>
+                      <button
+                        class="btn btn-xs"
+                        (click)="cancelEdit()"
+                        [disabled]="updatingQuantity()"
+                      >
+                        ยกเลิกแก้ไข
+                      </button>
+                    } @else {
+                      <button
+                        class="btn btn-xs btn-outline"
+                        (click)="editQuantity(order)"
+                        [disabled]="updatingQuantity() || cancellingOrderId() !== null"
+                      >
+                        แก้จำนวน
+                      </button>
+                      <button
+                        class="btn btn-xs btn-error"
+                        (click)="cancel(order.id)"
+                        [disabled]="updatingQuantity() || cancellingOrderId() !== null"
+                      >
+                        {{ cancellingOrderId() === order.id ? 'กำลังยกเลิก...' : 'ยกเลิกออเดอร์' }}
+                      </button>
+                    }
+                  </div>
+                </td>
               </tr>
             }
             @if (orders().length === 0) {
               <tr>
                 <td colspan="6" class="py-14 text-center">
-                  <div class="mx-auto mb-3 grid h-16 w-16 place-items-center rounded-2xl bg-[#f1f5fb] text-3xl">📦</div>
+                  <div
+                    class="mx-auto mb-3 grid h-16 w-16 place-items-center rounded-2xl bg-[#f1f5fb] text-3xl"
+                  >
+                    📦
+                  </div>
                   <strong class="block text-[#183b78]">ยังไม่มีออเดอร์</strong>
                   <span class="text-sm text-base-content/60">เพิ่มออเดอร์ใหม่จากแบบฟอร์ม</span>
                 </td>

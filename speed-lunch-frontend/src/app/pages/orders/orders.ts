@@ -19,19 +19,26 @@ export class Orders {
   orders = signal<OrderGetResponse[]>([]);
 
   selectedIds = signal<number[]>([]);
+  editingOrderId = signal<number | null>(null);
+  editingQuantity = signal(1);
+  updatingQuantity = signal(false);
+  cancellingOrderId = signal<number | null>(null);
+  replanNeeded = signal(false);
 
-    customerApi = inject(CustomerApi);
+  customerApi = inject(CustomerApi);
   customers = signal<CustomerGetResponse[]>([]);
   customerId = signal<number | null>(null);
   keyword = signal('');
   saving = signal(false);
   loadingCustomers = signal(false);
-  selectedCustomer = computed(() => this.customers().find(c => c.id === Number(this.customerId())));
+  selectedCustomer = computed(() =>
+    this.customers().find((c) => c.id === Number(this.customerId())),
+  );
   filteredCustomers = computed(() => {
     const keyword = this.keyword().trim().toLowerCase();
-    return this.customers().filter(c => `${c.name} ${c.phone}`.toLowerCase().includes(keyword));
+    return this.customers().filter((c) => `${c.name} ${c.phone}`.toLowerCase().includes(keyword));
   });
-quantity = signal(1);
+  quantity = signal(1);
 
   message = signal('');
   isError = signal(false);
@@ -46,12 +53,13 @@ quantity = signal(1);
       const res = await this.orderApi.getOrders(this.today, 'pending');
       this.orders.set(res);
       this.selectedIds.set(this.selectedIds().filter((id) => res.some((o) => o.id === id)));
+      if (!res.some((order) => order.id === this.editingOrderId())) this.cancelEdit();
     } catch (e) {
       this.showError(e);
     }
   }
 
-    async loadCustomers() {
+  async loadCustomers() {
     this.loadingCustomers.set(true);
     try {
       this.customers.set(await this.customerApi.getCustomers());
@@ -87,7 +95,7 @@ quantity = signal(1);
       this.saving.set(false);
     }
   }
-async addRandom(amount: HTMLInputElement) {
+  async addRandom(amount: HTMLInputElement) {
     try {
       await this.orderApi.addRandomOrders(Number(amount.value));
       this.showMessage(`สร้างออเดอร์ทดสอบ ${amount.value} รายการแล้ว`);
@@ -98,15 +106,61 @@ async addRandom(amount: HTMLInputElement) {
   }
 
   async cancel(id: number) {
+    if (this.updatingQuantity() || this.cancellingOrderId() !== null) return;
     if (!confirm(`ต้องการยกเลิกออเดอร์ #${id} ใช่ไหม?`)) {
       return;
     }
+    this.cancellingOrderId.set(id);
     try {
       await this.orderApi.cancelOrder(id);
       this.showMessage(`ยกเลิกออเดอร์ #${id} แล้ว`);
       await this.loadOrders();
     } catch (e) {
       this.showError(e);
+    } finally {
+      this.cancellingOrderId.set(null);
+    }
+  }
+
+  editQuantity(order: OrderGetResponse) {
+    if (this.updatingQuantity() || this.cancellingOrderId() !== null) return;
+    this.editingOrderId.set(order.id);
+    this.editingQuantity.set(Number(order.quantity));
+  }
+
+  cancelEdit() {
+    if (this.updatingQuantity()) return;
+    this.editingOrderId.set(null);
+    this.editingQuantity.set(1);
+  }
+
+  async saveQuantity(order: OrderGetResponse) {
+    if (
+      this.updatingQuantity() ||
+      this.cancellingOrderId() !== null ||
+      this.editingOrderId() !== order.id
+    )
+      return;
+    const quantity = Number(this.editingQuantity());
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 3) {
+      this.showError({ error: { error: 'จำนวนกล่องต้องอยู่ระหว่าง 1–3 กล่อง' } });
+      return;
+    }
+    if (quantity === Number(order.quantity)) {
+      this.cancelEdit();
+      return;
+    }
+    this.updatingQuantity.set(true);
+    try {
+      const result = await this.orderApi.updateQuantity(order.id, quantity);
+      this.editingOrderId.set(null);
+      this.replanNeeded.set(this.replanNeeded() || result.needs_replan);
+      this.showMessage(`แก้ไขออเดอร์ #${order.id} เป็น ${quantity} กล่องแล้ว`);
+      await this.loadOrders();
+    } catch (error) {
+      this.showError(error);
+    } finally {
+      this.updatingQuantity.set(false);
     }
   }
 
@@ -147,7 +201,9 @@ async addRandom(amount: HTMLInputElement) {
       this.showMessage(`ยกเลิกแล้ว ${ids.length} ออเดอร์`);
     } else {
       this.isError.set(true);
-      this.message.set(`ยกเลิกได้ ${ids.length - failed.length} ออเดอร์ ไม่สำเร็จ: #${failed.join(', #')}`);
+      this.message.set(
+        `ยกเลิกได้ ${ids.length - failed.length} ออเดอร์ ไม่สำเร็จ: #${failed.join(', #')}`,
+      );
     }
     this.selectedIds.set(failed);
     await this.loadOrders();

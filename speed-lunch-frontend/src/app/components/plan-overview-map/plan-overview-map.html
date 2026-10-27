@@ -1,0 +1,45 @@
+<section class="overview">
+  <header>
+    <div>
+      <h2>ภาพรวมเส้นทางไรเดอร์</h2>
+      <p>เลือกชื่อไรเดอร์เพื่อซ่อนหรือแสดงเส้นทาง</p>
+    </div>
+    <button type="button" class="btn btn-sm btn-outline" (click)="showAll()">แสดงทั้งหมด</button>
+  </header>
+  <div class="legend">
+    @for (route of plan().routes; track route.route_id) {
+      @if (route.status !== 'cancelled') {
+        <button
+          type="button"
+          class="route-toggle"
+          [class.hidden-route]="hidden().has(route.route_id)"
+          [attr.aria-pressed]="!hidden().has(route.route_id)"
+          (click)="toggle(route.route_id)"
+        >
+          <span class="swatch" [style.background-color]="color(route)"></span
+          >{{ route.rider_name }} · {{ route.job_code }}
+        </button>
+      }
+    }
+  </div>
+  <div #map class="map" aria-label="แผนที่รวมเส้นทางจัดส่งทุกไรเดอร์"></div>
+  @if (pending()) {
+    <p class="map-status" role="status">กำลังโหลดเส้นทางอีก {{ pending() }} ใบงาน...</p>
+  }
+  @if (failed().length) {
+    <div class="map-status text-error" role="alert">
+      โหลดเส้นทางไม่สำเร็จ {{ failed().length }} ใบงาน
+      @for (route of plan().routes; track route.route_id) {
+        @if (failed().includes(route.route_id)) {
+          <span class="failed-job">{{ route.job_code }}</span>
+        }
+      }
+      <button type="button" class="btn btn-xs" (click)="retry()" [disabled]="pending() > 0">
+        ลองใหม่
+      </button>
+    </div>
+  }
+  @if (!plan().routes.length) {
+    <p class="map-status">แผนนี้ยังไม่มีใบงาน</p>
+  }
+</section>

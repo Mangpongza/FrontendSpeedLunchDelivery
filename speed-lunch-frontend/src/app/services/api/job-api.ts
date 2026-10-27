@@ -9,6 +9,31 @@ import { RiderGetResponse } from '../../model/rider-get-res';
   providedIn: 'root',
 })
 export class JobApi {
+  public login(phone: string) {
+    return lastValueFrom(this.http.post<{
+      token: string; expires_at: string; rider: Pick<RiderGetResponse, 'id' | 'name' | 'phone'>;
+    }>(`${this.apiEndpoint}/auth/rider-login`, { phone }));
+  }
+
+  public getMyJob(code: string, token: string) {
+    return lastValueFrom(this.http.get<RiderRoute>(`${this.apiEndpoint}/me/jobs/${encodeURIComponent(code)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }));
+  }
+
+  public startJob(code: string, token: string) {
+    return lastValueFrom(this.http.patch<{ job_code: string; status: string }>(
+      `${this.apiEndpoint}/me/jobs/${encodeURIComponent(code)}/start`, {},
+      { headers: { Authorization: `Bearer ${token}` } },
+    ));
+  }
+
+  public deliverStop(code: string, sequence: number, token: string) {
+    return lastValueFrom(this.http.patch<{ job: RiderRoute }>(
+      `${this.apiEndpoint}/me/jobs/${encodeURIComponent(code)}/stops/${sequence}/deliver`, {},
+      { headers: { Authorization: `Bearer ${token}` } },
+    ));
+  }
   public async getTodayJobForRider(id: number): Promise<{ rider: RiderGetResponse; job: RiderRoute | undefined }> {
     const rider = await lastValueFrom(this.http.get<RiderGetResponse>(`${this.apiEndpoint}/riders/${id}`));
     let plan: PlanGetResponse;
