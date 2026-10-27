@@ -15,7 +15,7 @@
 }
 
 <div class="flex flex-col gap-4 md:flex-row">
-  <!-- Left Side: Form & Search Tools -->
+
   <div class="flex w-full flex-col gap-4 md:w-96 md:flex-none">
     <!-- Customer Form Card -->
     <div class="card w-full rounded-xl border border-base-200 bg-base-100 shadow-sm">
@@ -66,7 +66,7 @@
           <div class="flex items-center justify-between">
             <legend class="fieldset-legend">พิกัด GPS <span class="text-error">*</span></legend>
             <button class="btn btn-ghost btn-xs text-[#183b78]" type="button" (click)="fillMsuCoordinates()">
-              📍 พิกัด มมส.
+              ⦿ พิกัด มมส.
             </button>
           </div>
           <app-location-picker [(latitude)]="latitude" [(longitude)]="longitude"></app-location-picker>
@@ -105,7 +105,6 @@
       </div>
     </div>
 
-    <!-- Search & Filter Card (Requirement 2.2 & 2.3) -->
     <div class="card w-full rounded-xl border border-base-200 bg-base-100 shadow-sm">
       <div class="card-body">
         <div class="mb-1 flex items-center gap-3">
@@ -116,7 +115,7 @@
           </div>
         </div>
 
-        <!-- 1. ค้นหาจากส่วนหนึ่งของชื่อ หรือ นามสกุล -->
+  
         <fieldset class="fieldset">
           <legend class="fieldset-legend">1. ค้นหาจากชื่อ หรือ เบอร์โทร</legend>
           <div class="flex flex-row gap-2">
@@ -138,12 +137,12 @@
 
         <div class="divider my-2 text-xs text-base-content/50">หรือค้นหาตามระยะทาง</div>
 
-        <!-- 2. ค้นหาในระยะ 1 กม. (ตามโจทย์อาจารย์) -->
+
         <fieldset class="fieldset">
           <div class="flex items-center justify-between">
             <legend class="fieldset-legend">2. ค้นหาลูกค้าในรัศมี (กม.)</legend>
             <button class="btn btn-ghost btn-xs text-[#183b78]" type="button" (click)="fillNearbyMsu()">
-              📍 ร้าน มมส.
+              ⦿ ร้าน มมส.
             </button>
           </div>
           <div class="mb-2 flex flex-row gap-2">
@@ -167,13 +166,13 @@
               class="btn btn-sm border-[#183b78] bg-[#183b78] text-white hover:border-[#102c60] hover:bg-[#102c60]"
               (click)="searchNearby(1)"
             >
-              📍 ในระยะ 1 กม.
+              ⦿ ในระยะ 1 กม.
             </button>
             <button
               class="btn btn-sm btn-outline border-[#183b78] text-[#183b78] hover:bg-[#183b78] hover:text-white"
               (click)="searchNearby(2)"
             >
-              📍 ในระยะ 2 กม.
+              ⦿ ในระยะ 2 กม.
             </button>
           </div>
         </fieldset>
@@ -187,7 +186,7 @@
     </div>
   </div>
 
-  <!-- Right Side: Customer List Table -->
+
   <div class="card min-w-0 flex-1 rounded-xl border border-base-200 bg-base-100 shadow-sm">
     <div class="card-body">
       <div class="mb-2 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
@@ -260,7 +259,7 @@
                     (click)="openGoogleMaps(c.latitude, c.longitude)"
                     title="คลิกเพื่อเปิด Google Maps"
                   >
-                    📍 {{ c.latitude | number: '1.4-4' }}, {{ c.longitude | number: '1.4-4' }}
+                    ⦿ {{ c.latitude | number: '1.4-4' }}, {{ c.longitude | number: '1.4-4' }}
                   </button>
                 </td>
                 @if (activeFilter() === 'nearby') {
@@ -315,7 +314,6 @@
   </div>
 </div>
 
-<!-- Order History Modal -->
 @if (isModalOpen()) {
   <div class="modal modal-open">
     <div class="modal-box max-w-2xl rounded-2xl">

@@ -182,7 +182,7 @@ export class RoadMap implements AfterViewInit, OnDestroy {
       this.steps.set(route.legs.flatMap((leg) => leg.steps));
     } catch {
       if (version === this.version)
-        this.error.set('โหลดเส้นทางตามถนนไม่ได้ กรุณาลองใหม่ ตรวจอินเทอร์เน็ตหรือบริการเส้นทาง');
+        this.error.set('โหลดเส้นทางตามถนนไม่ได้ กรุณาลองใหม่ โปรดตรวจสอบอินเทอร์เน็ตหรือบริการเส้นทางอีกครั้ง');
     } finally {
       clearTimeout(timeout);
       if (version === this.version) this.loading.set(false);
@@ -227,7 +227,7 @@ export class RoadMap implements AfterViewInit, OnDestroy {
         this.stop();
         this.error.set(
           e.code === 1
-            ? 'กรุณาอนุญาตการเข้าถึงตำแหน่งในเบราว์เซอร์ แล้วกดเริ่มนำทางอีกครั้ง'
+            ? 'อนุญาตการเข้าถึงตำแหน่งในเบราว์เซอร์ แล้วกดเริ่มนำทางอีกครั้ง'
             : 'หาตำแหน่งไม่ได้ กรุณาตรวจ GPS แล้วลองใหม่',
         );
       },
