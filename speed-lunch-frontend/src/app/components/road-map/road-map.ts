@@ -101,21 +101,39 @@ export class RoadMap implements AfterViewInit, OnDestroy {
       L.circleMarker(shop, { radius: 9, color: '#d71920', fillOpacity: 1 })
         .bindTooltip('ร้าน', { permanent: true })
         .addTo(this.markers!);
+    const groups = new Map<string, ReturnType<RoadMap['stops']>>();
     for (const stop of this.stops()) {
       const point: L.LatLngTuple = [Number(stop.latitude), Number(stop.longitude)];
       if (!this.valid(point)) continue;
+      const key = point.join(',');
+      const group = groups.get(key) ?? [];
+      group.push(stop);
+      groups.set(key, group);
+    }
+    for (const stops of groups.values()) {
+      const first = stops[0]!;
+      const point: L.LatLngTuple = [Number(first.latitude), Number(first.longitude)];
+      const label = stops.map(stop => Number(stop.stop_sequence)).join(', ');
+      const width = Math.max(32, label.length * 9 + 16);
       const popup = document.createElement('div');
-      popup.textContent = `จุด ${stop.stop_sequence}: ${stop.customer_name} / ${stop.quantity} กล่อง / ${stop.address}`;
+      if (stops.length > 1) {
+        const heading = document.createElement('strong');
+        heading.textContent = 'หลายออเดอร์อยู่ตำแหน่งเดียวกัน';
+        popup.appendChild(heading);
+      }
+      for (const stop of stops) {
+        const row = document.createElement('p');
+        row.textContent = `จุด ${stop.stop_sequence}: ${stop.customer_name} / ${stop.quantity} กล่อง / ${stop.address}`;
+        popup.appendChild(row);
+      }
       L.marker(point, {
         icon: L.divIcon({
           className: '',
-          iconSize: [32, 32],
-          iconAnchor: [16, 16],
-          html: `<div style="width:32px;height:32px;display:grid;place-items:center;background:#183b78;color:white;border:2px solid white;border-radius:50%;font-weight:bold">${Number(stop.stop_sequence)}</div>`,
+          iconSize: [width, 32],
+          iconAnchor: [width / 2, 16],
+          html: `<div style="width:${width}px;height:32px;display:grid;place-items:center;background:#183b78;color:white;border:2px solid white;border-radius:16px;font-weight:bold;white-space:nowrap">${label}</div>`,
         }),
-      })
-        .bindPopup(popup)
-        .addTo(this.markers!);
+      }).bindPopup(popup).addTo(this.markers!);
     }
     void this.route(true);
   }
