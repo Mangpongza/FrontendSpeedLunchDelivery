@@ -124,7 +124,7 @@
                 <td>{{ rider.phone }}</td>
                 <td>
                   @if (rider.jobs_on_date > 0) {
-                    <span class="badge bg-[#183b78] text-white border-0">มีใบงาน</span>
+                    <a class="badge bg-[#183b78] text-white border-0 hover:bg-[#2855a2] cursor-pointer" [routerLink]="['/rider']" [queryParams]="{ riderId: rider.id }">มีใบงาน (ดูงาน)</a>
                   } @else {
                     <span class="badge badge-ghost">ว่าง</span>
                   }

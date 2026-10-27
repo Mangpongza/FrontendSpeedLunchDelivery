@@ -1,142 +1,234 @@
 <div class="rider-page">
   <header class="rider-heading">
     <div>
-      <p>ส่งด่วนมื้อเที่ยง</p>
+      <p class="subtitle">ระบบจัดส่งด่วนมื้อเที่ยง</p>
       <h1>งานจัดส่งของไรเดอร์</h1>
     </div>
     @if (job() || rider()) {
-      <button class="btn btn-sm" (click)="clear()" [disabled]="actionPending()">เปลี่ยนไรเดอร์</button>
+      <button class="btn btn-sm btn-ghost text-white border border-white/40 hover:bg-white/20" (click)="clear()" [disabled]="actionPending()">
+        เปลี่ยนไรเดอร์
+      </button>
     }
   </header>
 
-  <form class="rider-search" (ngSubmit)="findRider()">
-    <label for="rider-id">รหัสไรเดอร์</label>
-    <div class="search-row">
-      <input
-        id="rider-id"
-        name="riderId"
-        class="input"
-        type="text"
-        inputmode="numeric"
-        placeholder="เช่น 5"
-        [(ngModel)]="riderId"
-        [disabled]="loading() || actionPending()"
-      />
-      <button class="btn btn-primary" type="submit" [disabled]="loading() || actionPending()">
-        {{ loading() ? 'กำลังโหลด...' : 'ดูงานวันนี้' }}
-      </button>
-    </div>
-    <small>กรอกรหัสไรเดอร์เพื่อดูใบงานในแผนล่าสุดของวันนี้</small>
-  </form>
-
-  <form class="rider-search" (ngSubmit)="loadJob(jobCode)">
-    <label for="job-code">หรือค้นด้วยเลขใบงาน</label>
-    <div class="search-row">
-      <input id="job-code" name="jobCode" class="input" type="text" placeholder="JOB000001-01"
-        [(ngModel)]="jobCode" [disabled]="loading() || actionPending()" autocomplete="off" />
-      <button class="btn btn-outline" type="submit" [disabled]="loading() || actionPending()">ดูใบงาน</button>
-    </div>
-  </form>
-
-  <section class="rider-search">
-    @if (loggedRider(); as account) {
-      <div class="search-row">
-        <p>เข้าสู่ระบบ: {{ account.name }} (ID {{ account.id }})</p>
-        <button class="btn btn-sm btn-outline" (click)="logout()" [disabled]="actionPending()">ออกจากระบบ</button>
+  <section class="rider-selector-card">
+    <div class="selector-row">
+      <div class="selector-field">
+        <label for="rider-select">เลือกรถ / ไรเดอร์</label>
+        <select
+          id="rider-select"
+          class="select select-bordered w-full"
+          [ngModel]="selectedRiderId()"
+          (ngModelChange)="onSelectRider($event)"
+          [disabled]="loading() || actionPending()"
+        >
+          <option value="">-- เลือกไรเดอร์ --</option>
+          @for (r of riders(); track r.id) {
+            <option [value]="r.id">ไรเดอร์ {{ r.id }}: {{ r.name }} ({{ r.phone }})</option>
+          }
+        </select>
       </div>
-    } @else {
-      <form (ngSubmit)="login()">
-        <label for="rider-phone">เข้าสู่ระบบเพื่ออัปเดตงาน</label>
-        <div class="search-row">
-          <input id="rider-phone" name="loginPhone" class="input" type="tel" placeholder="เบอร์โทรไรเดอร์"
-            [(ngModel)]="loginPhone" [disabled]="loginPending()" autocomplete="tel" />
-          <button class="btn btn-primary" type="submit" [disabled]="loginPending()">{{ loginPending() ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ' }}</button>
+
+      <div class="selector-divider">หรือ</div>
+
+      <form class="selector-jobcode" (ngSubmit)="loadJob(jobCode)">
+        <label for="job-code-input">ค้นหาด้วยเลขใบงาน</label>
+        <div class="flex gap-2">
+          <input
+            id="job-code-input"
+            name="jobCode"
+            type="text"
+            class="input input-bordered flex-1"
+            placeholder="เช่น JOB000001-01"
+            [(ngModel)]="jobCode"
+            [disabled]="loading() || actionPending()"
+            autocomplete="off"
+          />
+          <button class="btn btn-primary" type="submit" [disabled]="loading() || actionPending()">
+            {{ loading() ? 'กำลังโหลด...' : 'ค้นหา' }}
+          </button>
         </div>
       </form>
-    }
+    </div>
   </section>
 
-  @if (notice()) { <div class="alert alert-success mb-3" role="status">{{ notice() }}</div> }
-  @if (message()) {
-    <div class="alert alert-error" role="alert">{{ message() }}</div>
+  @if (notice()) {
+    <div class="alert alert-success shadow-sm mb-4" role="status">
+      <span>{{ notice() }}</span>
+    </div>
   }
+  @if (message()) {
+    <div class="alert alert-error shadow-sm mb-4" role="alert">
+      <span>{{ message() }}</span>
+    </div>
+  }
+
   @if (searched() && !job()) {
     <div class="empty-state">
-      <h2>{{ rider()?.name }}</h2>
-      <p>ยังไม่มีใบงานในแผนล่าสุดของวันนี้</p>
+      <h2>{{ rider()?.name }} (ID: {{ rider()?.id }})</h2>
+      <p class="text-base-content/70">ยังไม่มีใบงานในแผนจัดส่งของวันนี้</p>
     </div>
   }
 
   @if (job(); as work) {
-    <section class="job-heading">
-      <div>
-        <h2>{{ work.rider_name }}</h2>
-        <p>ใบงาน {{ work.job_code }}</p>
+    <section class="job-banner">
+      <div class="job-banner-header">
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h2>{{ work.rider_name }}</h2>
+            <span class="badge badge-primary text-white font-mono">{{ work.job_code }}</span>
+          </div>
+          <p class="text-sm text-base-content/70 mt-1">
+            โทรติดต่อไรเดอร์: {{ work.rider_phone || rider()?.phone || '-' }}
+          </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          @if (work.status === 'assigned') {
+            <button
+              class="btn btn-warning btn-md font-bold shadow-sm"
+              (click)="startJob()"
+              [disabled]="actionPending()"
+            >
+              เริ่มออกส่ง
+            </button>
+          } @else if (work.status === 'in_progress') {
+            <span class="badge badge-warning badge-lg p-3 font-semibold">กำลังจัดส่ง</span>
+          } @else if (work.status === 'completed') {
+            <span class="badge badge-success badge-lg p-3 text-white font-semibold">ส่งครบทุกจุดแล้ว</span>
+          } @else if (work.status === 'cancelled') {
+            <span class="badge badge-error badge-lg p-3 text-white font-semibold">ยกเลิกใบงาน</span>
+          }
+        </div>
       </div>
-      <span class="badge badge-outline">{{ statusText(work.status) }}</span>
+
+      <div class="progress-box">
+        <div class="flex justify-between items-center text-sm mb-1.5 font-medium">
+          <span>ความคืบหน้าการจัดส่ง</span>
+          <span class="text-primary font-bold">
+            ส่งสำเร็จแล้ว {{ deliveredStops() }} จาก {{ totalStops() }} จุด ({{ progressPercent() }}%)
+          </span>
+        </div>
+        <progress
+          class="progress progress-success w-full h-3.5 bg-base-200"
+          [value]="deliveredStops()"
+          [max]="totalStops() || 1"
+        ></progress>
+      </div>
     </section>
-    @if (loggedRider() && !ownsJob()) {
-      <p class="alert alert-info mb-3">ใบงานนี้เป็นของไรเดอร์คนอื่น ดูรายละเอียดได้ แต่ไม่สามารถอัปเดตงานได้</p>
-    }
-    @if (ownsJob() && work.status === 'assigned') {
-      <button class="btn btn-primary mb-3" (click)="startJob()" [disabled]="actionPending()">
-        {{ actionPending() ? 'กำลังบันทึก...' : 'เริ่มออกส่ง' }}
-      </button>
-    }
+
     @if (work.status === 'cancelled') {
       <div class="alert alert-error">
-        ใบงานถูกยกเลิกแล้ว กรุณาค้นด้วยรหัสไรเดอร์เพื่อดูงานล่าสุด
+        ใบงานนี้ถูกยกเลิกแล้วเนื่องจากมีการจัดเส้นทางใหม่ กรุณาเลือกไรเดอร์อีกครั้งเพื่อดูงานล่าสุด
       </div>
     } @else {
       <section class="job-layout">
         <div class="map-panel" id="rider-road-map">
           <app-road-map [job]="work" [target]="targetStop()" [allowNavigation]="true" />
           @if (targetStop() !== null) {
-            <p class="map-note">กำลังดูจุดส่งที่ {{ targetStop() }}</p>
-            <button class="btn btn-sm map-button" (click)="targetStop.set(null)">
-              กลับไปดูครบทุกจุด
-            </button>
+            <div class="p-3 bg-base-100 flex items-center justify-between border-t border-base-200">
+              <span class="text-xs text-base-content/70">กำลังโฟกัสจุดส่งที่ {{ targetStop() }}</span>
+              <button class="btn btn-xs btn-outline" (click)="targetStop.set(null)">
+                ดูภาพรวมทั้งหมด
+              </button>
+            </div>
           }
         </div>
+
         <div class="job-details">
           <div class="job-summary">
             <div>
-              <small>ข้าวกล่องที่ต้องหยิบ</small><strong>{{ work.total_boxes }} กล่อง</strong>
+              <small>ข้าวกล่องที่ต้องหยิบ</small>
+              <strong>{{ work.total_boxes }} กล่อง</strong>
             </div>
             <div>
-              <small>จุดส่ง</small><strong>{{ work.stops.length }} จุด</strong>
+              <small>จุดส่งทั้งหมด</small>
+              <strong>{{ work.stops.length }} จุด</strong>
             </div>
             <div>
-              <small>ระยะทาง</small><strong>{{ work.distance_km }} กม.</strong>
+              <small>ระยะทางรวม</small>
+              <strong>{{ work.distance_km }} กม.</strong>
             </div>
             <div>
-              <small>เวลาโดยประมาณ</small><strong>{{ work.duration_minutes }} นาที</strong>
+              <small>เวลาโดยประมาณ</small>
+              <strong>{{ work.duration_minutes }} นาที</strong>
             </div>
           </div>
-          <p class="departure">ออกจากร้าน {{ time(work.departure_time) }} น.</p>
-          <h3>ลำดับการจัดส่ง</h3>
-          @for (stop of work.stops; track stop.stop_id) {
-            <article class="stop-card">
-              <div class="stop-heading">
-                <span class="stop-number">{{ stop.stop_sequence }}</span>
-                <h4>{{ stop.customer_name }}</h4>
-                <b>{{ stop.quantity }} กล่อง</b>
-              </div>
-              <p>{{ stop.address || 'ไม่ได้ระบุที่อยู่' }}</p>
-              <p>ถึงประมาณ {{ time(stop.arrival_time) }} น. · {{ statusText(stop.status) }}</p>
-              <div class="stop-actions">
-                <a [href]="'tel:' + stop.phone">โทร {{ stop.phone }}</a
-                ><button class="btn btn-sm btn-outline" (click)="navigation(stop)">
-                  นำทางไปจุดนี้
-                </button>
-                @if (ownsJob() && work.status === 'in_progress' && stop.status === 'pending') {
-                  <button class="btn btn-sm btn-success" (click)="deliver(stop)" [disabled]="actionPending()">ยืนยันส่งสำเร็จ</button>
-                }
-              </div>
-            </article>
-          } @empty {
-            <p>ใบงานนี้ไม่มีจุดส่ง</p>
-          }
+
+          <p class="departure-text">
+            ออกจากร้านเวลา <b>{{ time(work.departure_time) }} น.</b>
+          </p>
+
+          <h3 class="text-lg font-bold mb-3">ลำดับการจัดส่ง</h3>
+
+          <div class="stops-container">
+            @for (stop of work.stops; track stop.stop_id) {
+              <article class="stop-card" [class.delivered]="stop.status === 'delivered'">
+                <div class="stop-card-header">
+                  <div class="flex items-center gap-3">
+                    <span class="stop-number" [class.done]="stop.status === 'delivered'">
+                      @if (stop.status === 'delivered') {
+                        ✓
+                      } @else {
+                        {{ stop.stop_sequence }}
+                      }
+                    </span>
+                    <div>
+                      <h4 class="customer-title">{{ stop.customer_name }}</h4>
+                      <p class="customer-phone text-xs">
+                        โทร: <a [href]="'tel:' + stop.phone" class="link link-primary font-medium">{{ stop.phone }}</a>
+                      </p>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <span class="badge badge-lg font-bold" [class.badge-neutral]="stop.status !== 'delivered'" [class.badge-ghost]="stop.status === 'delivered'">
+                      {{ stop.quantity }} กล่อง
+                    </span>
+                  </div>
+                </div>
+
+                <div class="stop-card-body">
+                  <p class="address-text">
+                    ที่อยู่: {{ stop.address || 'ไม่ได้ระบุที่อยู่' }}
+                  </p>
+
+                  <div class="eta-row">
+                    @if (stop.status === 'delivered') {
+                      <span class="badge badge-success text-white gap-1 font-medium">
+                        ส่งสำเร็จแล้ว @if (stop.delivered_at) { ({{ time(stop.delivered_at) }} น.) }
+                      </span>
+                    } @else {
+                      <span class="text-xs text-base-content/70">
+                        ถึงประมาณ {{ time(stop.arrival_time) }} น. · {{ statusText(stop.status) }}
+                      </span>
+                    }
+                  </div>
+                </div>
+
+                <div class="stop-card-actions">
+                  <button class="btn btn-sm btn-outline" (click)="navigation(stop)">
+                    ดูหมุด
+                  </button>
+
+                  <a [href]="'tel:' + stop.phone" class="btn btn-sm btn-outline">
+                    โทร
+                  </a>
+
+                  @if (stop.status === 'pending') {
+                    <button
+                      class="btn btn-sm btn-success text-white font-bold ml-auto"
+                      (click)="deliver(stop)"
+                      [disabled]="actionPending()"
+                    >
+                      ยืนยันส่งสำเร็จ
+                    </button>
+                  }
+                </div>
+              </article>
+            } @empty {
+              <p class="text-center py-6 text-base-content/60">ใบงานนี้ไม่มีจุดส่ง</p>
+            }
+          </div>
         </div>
       </section>
     }

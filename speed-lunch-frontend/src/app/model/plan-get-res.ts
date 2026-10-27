@@ -46,6 +46,7 @@ export interface RouteStop {
   stop_sequence: number;
   arrival_time: string;
   status: string;
+  delivered_at?: string;
   quantity: number;
   customer_name: string;
   phone: string;

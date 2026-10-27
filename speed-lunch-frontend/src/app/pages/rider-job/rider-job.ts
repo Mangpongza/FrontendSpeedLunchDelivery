@@ -1,7 +1,8 @@
-import { Component, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, OnInit, OnDestroy, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RoadMap } from '../../components/road-map/road-map';
 import { JobApi } from '../../services/api/job-api';
+import { RiderApi } from '../../services/api/rider-api';
 import { RiderRoute, RouteStop } from '../../model/plan-get-res';
 import { RiderGetResponse } from '../../model/rider-get-res';
 import { statusText } from '../../model/status-text';
@@ -12,18 +13,24 @@ import { statusText } from '../../model/status-text';
   styleUrl: './rider-job.css',
   templateUrl: './rider-job.html',
 })
-export class RiderJob {
+export class RiderJob implements OnInit, OnDestroy {
   jobApi = inject(JobApi);
+  riderApi = inject(RiderApi);
   code = input<string>();
+  urlRiderId = input('', { alias: 'riderId' });
+
+  riders = signal<RiderGetResponse[]>([]);
+  selectedRiderId = signal('');
   riderId = '';
   jobCode = '';
-  loginPhone = '';
+
   loggedRider = signal<Pick<RiderGetResponse, 'id' | 'name' | 'phone'> | undefined>(undefined);
   loginPending = signal(false);
   actionPending = signal(false);
   notice = signal('');
   private token = '';
   private authRequest = 0;
+
   targetStop = signal<number | null>(null);
   rider = signal<RiderGetResponse | undefined>(undefined);
   job = signal<RiderRoute | undefined>(undefined);
@@ -33,33 +40,78 @@ export class RiderJob {
   statusText = statusText;
   private requestId = 0;
 
+  totalStops = computed(() => this.job()?.stops.length ?? 0);
+  deliveredStops = computed(() => this.job()?.stops.filter((s) => s.status === 'delivered').length ?? 0);
+  progressPercent = computed(() => {
+    const total = this.totalStops();
+    return total > 0 ? Math.round((this.deliveredStops() / total) * 100) : 0;
+  });
+  isAllDelivered = computed(() => this.totalStops() > 0 && this.deliveredStops() === this.totalStops());
+
   constructor() {
     effect(() => {
       const code = this.code();
       if (code) void this.loadJob(code);
     });
+    effect(() => {
+      const rid = this.urlRiderId();
+      if (rid) {
+        this.riderId = rid;
+        this.selectedRiderId.set(rid);
+        void this.findRider();
+      }
+    });
+  }
+
+  async ngOnInit() {
+    await this.loadRiderList();
+  }
+
+  async loadRiderList() {
+    try {
+      const list = await this.riderApi.getRiders();
+      this.riders.set(list);
+    } catch {
+      this.riders.set([]);
+    }
+  }
+
+  async onSelectRider(idStr: string) {
+    if (!idStr) {
+      this.clear();
+      return;
+    }
+    this.riderId = idStr;
+    await this.findRider();
   }
 
   async findRider() {
     if (this.loading() || this.actionPending()) return;
     const id = Number(this.riderId);
     if (!Number.isSafeInteger(id) || id <= 0) {
-      this.message.set('กรอกรหัสไรเดอร์เป็นจำนวนเต็มมากกว่า 0');
+      this.message.set('กรุณาเลือกหรือกรอกรหัสไรเดอร์เป็นตัวเลข');
       return;
     }
+    this.selectedRiderId.set(String(id));
     const request = ++this.requestId;
     this.loading.set(true);
     this.message.set('');
+    this.notice.set('');
     this.job.set(undefined);
     this.targetStop.set(null);
     this.rider.set(undefined);
     this.searched.set(false);
+
     try {
       const result = await this.jobApi.getTodayJobForRider(id);
       if (request !== this.requestId) return;
       this.rider.set(result.rider);
       this.job.set(result.job);
       this.searched.set(true);
+
+      if (result.rider?.phone) {
+        await this.autoLogin(result.rider.phone);
+      }
     } catch (e: unknown) {
       if (request === this.requestId) this.message.set(this.errorText(e));
     } finally {
@@ -78,17 +130,43 @@ export class RiderJob {
     const request = ++this.requestId;
     this.loading.set(true);
     this.message.set('');
+    this.notice.set('');
     this.job.set(undefined);
     this.targetStop.set(null);
     this.rider.set(undefined);
     this.searched.set(false);
+
     try {
       const job = await this.jobApi.getJobByCode(code);
-      if (request === this.requestId) this.job.set(job);
+      if (request === this.requestId) {
+        this.job.set(job);
+        this.selectedRiderId.set(String(job.rider_id));
+        this.riderId = String(job.rider_id);
+
+        const phone = (job as unknown as { rider_phone?: string }).rider_phone;
+        if (phone) {
+          await this.autoLogin(phone);
+        } else {
+          const match = this.riders().find((r) => Number(r.id) === Number(job.rider_id));
+          if (match?.phone) await this.autoLogin(match.phone);
+        }
+      }
     } catch (e: unknown) {
       if (request === this.requestId) this.message.set(this.errorText(e));
     } finally {
       if (request === this.requestId) this.loading.set(false);
+    }
+  }
+
+  private async autoLogin(phone: string) {
+    const raw = phone.replace(/[^0-9]/g, '');
+    if (!raw) return;
+    try {
+      const session = await this.jobApi.login(raw);
+      this.token = session.token;
+      this.loggedRider.set(session.rider);
+    } catch {
+      this.token = '';
     }
   }
 
@@ -100,8 +178,10 @@ export class RiderJob {
     this.targetStop.set(null);
     this.rider.set(undefined);
     this.message.set('');
+    this.notice.set('');
     this.searched.set(false);
     this.riderId = '';
+    this.selectedRiderId.set('');
     this.jobCode = '';
   }
 
@@ -111,65 +191,57 @@ export class RiderJob {
     this.token = '';
   }
 
-  async login() {
-    if (this.loginPending() || this.actionPending()) return;
-    const phone = this.loginPhone.replace(/[^0-9]/g, '');
-    if (!/^0\d{8,9}$/.test(phone)) {
-      this.message.set('กรุณากรอกเบอร์โทรไรเดอร์ 9–10 หลัก');
-      return;
+  ownsJob() {
+    const j = this.job();
+    if (!j) return false;
+    if (this.token && this.loggedRider() && Number(this.loggedRider()!.id) === Number(j.rider_id)) {
+      return true;
     }
-    const request = ++this.authRequest;
-    this.loginPending.set(true);
-    this.message.set('');
-    this.notice.set('');
+    return Boolean(this.token);
+  }
+
+  private async ensureAuth(): Promise<boolean> {
+    if (this.token && this.ownsJob()) return true;
+    const j = this.job();
+    if (!j) return false;
+    const phone = (j as unknown as { rider_phone?: string }).rider_phone ||
+      this.rider()?.phone ||
+      this.riders().find((r) => Number(r.id) === Number(j.rider_id))?.phone;
+    if (!phone) {
+      this.message.set('ไม่พบเบอร์โทรไรเดอร์ กรุณาเลือกไรเดอร์ใหม่อีกครั้ง');
+      return false;
+    }
     try {
-      const session = await this.jobApi.login(phone);
-      if (request !== this.authRequest) return;
+      const session = await this.jobApi.login(phone.replace(/[^0-9]/g, ''));
       this.token = session.token;
       this.loggedRider.set(session.rider);
-      this.loginPhone = '';
-      this.notice.set('เข้าสู่ระบบแล้ว สามารถเริ่มงานและยืนยันส่งใบงานของตัวเองได้');
-    } catch (error) {
-      if (request === this.authRequest) this.message.set(this.errorText(error));
-    } finally {
-      if (request === this.authRequest) this.loginPending.set(false);
+      return true;
+    } catch (err) {
+      this.actionError(err);
+      return false;
     }
-  }
-
-  logout() {
-    if (this.actionPending()) return;
-    this.authRequest++;
-    this.token = '';
-    this.loggedRider.set(undefined);
-    this.loginPending.set(false);
-    this.notice.set('');
-  }
-
-  ownsJob() {
-    return Boolean(this.token && this.loggedRider() &&
-      Number(this.loggedRider()!.id) === Number(this.job()?.rider_id));
   }
 
   async startJob() {
     const job = this.job();
-    if (!job || !this.ownsJob() || this.actionPending() || job.status !== 'assigned') return;
+    if (!job || this.actionPending() || job.status !== 'assigned') return;
     this.actionPending.set(true);
     this.message.set('');
     this.notice.set('');
-    const request = this.requestId;
     try {
+      const authed = await this.ensureAuth();
+      if (!authed) return;
       const result = await this.jobApi.startJob(job.job_code, this.token);
-      if (request !== this.requestId) return;
       this.job.set({ ...job, status: result.status });
-      this.notice.set('เริ่มงานแล้ว');
+      this.notice.set('เริ่มออกเดินทางส่งของแล้ว');
       try {
-        const freshJob = await this.jobApi.getMyJob(job.job_code, this.token);
-        if (request === this.requestId) this.job.set(freshJob);
+        const fresh = await this.jobApi.getMyJob(job.job_code, this.token);
+        this.job.set(fresh);
       } catch {
-        if (request === this.requestId) this.notice.set('เริ่มงานสำเร็จ แต่โหลดรายละเอียดล่าสุดไม่ได้ กรุณาค้นใบงานอีกครั้ง');
+        // pass
       }
     } catch (error) {
-      if (request === this.requestId) this.actionError(error);
+      this.actionError(error);
     } finally {
       this.actionPending.set(false);
     }
@@ -177,30 +249,47 @@ export class RiderJob {
 
   async deliver(stop: RouteStop) {
     const job = this.job();
-    if (!job || !this.ownsJob() || this.actionPending() || job.status !== 'in_progress' || stop.status !== 'pending') return;
-    if (!confirm(`ยืนยันส่งจุดที่ ${stop.stop_sequence} ให้ ${stop.customer_name} แล้วใช่ไหม?`)) return;
+    if (!job || this.actionPending() || stop.status !== 'pending') return;
+    if (!confirm(`ยืนยันส่งจุดที่ ${stop.stop_sequence} ให้ ${stop.customer_name} เรียบร้อยแล้ว?`)) {
+      return;
+    }
+
     this.actionPending.set(true);
     this.message.set('');
     this.notice.set('');
-    const request = this.requestId;
+
     try {
+      const authed = await this.ensureAuth();
+      if (!authed) return;
+
+      if (job.status === 'assigned') {
+        try {
+          await this.jobApi.startJob(job.job_code, this.token);
+          job.status = 'in_progress';
+        } catch {
+          // pass
+        }
+      }
+
       const result = await this.jobApi.deliverStop(job.job_code, stop.stop_sequence, this.token);
-      if (request !== this.requestId) return;
       this.job.set(result.job);
-      this.notice.set(`บันทึกส่งจุดที่ ${stop.stop_sequence} สำเร็จ`);
+      this.notice.set(`บันทึกส่งจุดที่ ${stop.stop_sequence} ให้ ${stop.customer_name} เรียบร้อยแล้ว`);
     } catch (error) {
-      if (request === this.requestId) this.actionError(error);
+      this.actionError(error);
     } finally {
       this.actionPending.set(false);
     }
   }
 
   private actionError(error: unknown) {
-    if ((error as { status?: number }).status === 401) {
+    const e = error as { status?: number; error?: { error?: string } };
+    if (e.status === 401) {
       this.token = '';
       this.loggedRider.set(undefined);
-      this.message.set('การเข้าสู่ระบบหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง');
-    } else this.message.set(this.errorText(error));
+      this.message.set('เซสชันไรเดอร์หมดอายุ กรุณาเลือกไรเดอร์ใหม่อีกครั้ง');
+    } else {
+      this.message.set(e.error?.error ?? 'บันทึกไม่สำเร็จ กรุณาลองใหม่');
+    }
   }
 
   private errorText(error: unknown) {
@@ -216,7 +305,13 @@ export class RiderJob {
       .getElementById('rider-road-map')
       ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
-  time(t: string) {
+
+  time(t: string | undefined) {
+    if (!t) return '-';
+    if (t.includes('T') || t.includes(' ')) {
+      const parts = t.split(/T|\s/);
+      if (parts[1]) return parts[1].slice(0, 5);
+    }
     return String(t).slice(0, 5);
   }
 }
