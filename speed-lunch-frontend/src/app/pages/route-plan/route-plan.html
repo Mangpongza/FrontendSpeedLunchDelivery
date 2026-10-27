@@ -9,9 +9,7 @@
   >
     @if (loading()) {
       <span class="loading loading-spinner"></span> กำลังคำนวณ...
-    } @else {
-      จัดเส้นทาง
-    }
+    } @else { {{ plan() ? 'คำนวณเส้นทางใหม่' : 'จัดเส้นทาง' }} }
   </button>
 </div>
 
