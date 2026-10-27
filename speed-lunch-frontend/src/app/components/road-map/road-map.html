@@ -24,9 +24,6 @@
 @if (accuracy() !== null) {
   <p class="note">ความแม่นยำ GPS ประมาณ {{ accuracy() }} ม.</p>
 }
-<p class="note">
-  เส้นทางจาก OpenStreetMap / OSRM แบบรถยนต์ โปรดตรวจป้ายจราจรและทางที่รถจักรยานยนต์ใช้ได้
-</p>
 @if (steps().length) {
   <details class="note">
     <summary>คำแนะนำตามเส้นทาง</summary>
