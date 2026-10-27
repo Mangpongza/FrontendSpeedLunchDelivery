@@ -1,21 +1,48 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { RouteApi } from '../../services/api/route-api';
-import { PlanGetResponse } from '../../model/plan-get-res';
+import { PlanGetResponse, RiderRoute } from '../../model/plan-get-res';
+
+import { RoadMap } from '../../components/road-map/road-map';
 
 @Component({
-  imports: [RouterModule],
+  imports: [RouterModule, RoadMap],
   selector: 'app-route-plan',
   styleUrl: './route-plan.css',
   templateUrl: './route-plan.html',
 })
 export class RoutePlan {
   routeApi = inject(RouteApi);
+  selectedRoute = signal<RiderRoute | undefined>(undefined);
+
+  openMap(route: RiderRoute) {
+    this.selectedRoute.set({
+      ...route,
+      shop: this.plan()?.shop,
+      departure_time: this.plan()!.departure_time,
+    });
+    setTimeout(() =>
+      document
+        .getElementById('plan-road-map')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+    );
+  }
   plan = signal<PlanGetResponse | undefined>(undefined);
   loading = signal(false);
   message = signal('');
 
-  colors = ['#ef4444', '#22c55e', '#3b82f6', '#f59e0b', '#a855f7', '#ec4899', '#14b8a6', '#64748b', '#84cc16', '#f97316'];
+  colors = [
+    '#ef4444',
+    '#22c55e',
+    '#3b82f6',
+    '#f59e0b',
+    '#a855f7',
+    '#ec4899',
+    '#14b8a6',
+    '#64748b',
+    '#84cc16',
+    '#f97316',
+  ];
 
   ngOnInit() {
     this.loadLatest();
@@ -30,13 +57,19 @@ export class RoutePlan {
   }
 
   async calculate() {
-    if (this.plan() && !confirm('วันนี้จัดเส้นทางไปแล้ว ถ้าจัดใหม่ ใบงานเดิมของไรเดอร์ทุกคนจะถูกยกเลิกและได้เลขใบงานใหม่ ต้องการจัดใหม่ไหม?')) {
+    if (
+      this.plan() &&
+      !confirm(
+        'วันนี้จัดเส้นทางไปแล้ว ถ้าจัดใหม่ ใบงานเดิมของไรเดอร์ทุกคนจะถูกยกเลิกและได้เลขใบงานใหม่ ต้องการจัดใหม่ไหม?',
+      )
+    ) {
       return;
     }
     this.loading.set(true);
     this.message.set('');
     try {
       this.plan.set(await this.routeApi.calculate());
+      this.selectedRoute.set(undefined);
     } catch (e: any) {
       this.message.set(e?.error?.error ?? 'เชื่อมต่อ backend ไม่ได้');
     }

@@ -1,0 +1,39 @@
+<div #map class="map" aria-label="แผนที่เส้นทางตามถนน"></div>
+<div class="controls">
+  <button class="btn btn-sm btn-outline" (click)="route(true)" [disabled]="loading()">
+    ดูเส้นทางทั้งหมด
+  </button>
+  @if (allowNavigation()) {
+    <button class="btn btn-sm btn-primary" (click)="start()" [disabled]="tracking()">
+      เริ่มนำทางจากตำแหน่งฉัน
+    </button>
+    @if (tracking()) {
+      <button class="btn btn-sm" (click)="stop(); route(true)">หยุดนำทาง</button>
+    }
+  }
+</div>
+@if (loading()) {
+  <p class="note" role="status">กำลังคำนวณเส้นทางตามถนน...</p>
+}
+@if (error()) {
+  <p class="note text-error" role="alert">{{ error() }}</p>
+}
+@if (summary()) {
+  <p class="note font-semibold">{{ summary() }}</p>
+}
+@if (accuracy() !== null) {
+  <p class="note">ความแม่นยำ GPS ประมาณ {{ accuracy() }} ม.</p>
+}
+<p class="note">
+  เส้นทางจาก OpenStreetMap / OSRM แบบรถยนต์ โปรดตรวจป้ายจราจรและทางที่รถจักรยานยนต์ใช้ได้
+</p>
+@if (steps().length) {
+  <details class="note">
+    <summary>คำแนะนำตามเส้นทาง</summary>
+    <ol class="directions">
+      @for (step of steps(); track $index) {
+        <li>{{ instruction(step) }}</li>
+      }
+    </ol>
+  </details>
+}

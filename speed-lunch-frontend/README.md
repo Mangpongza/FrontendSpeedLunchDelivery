@@ -57,3 +57,15 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+
+## แผนที่เส้นทางในเว็บ
+
+หน้า `/route-plan` มีปุ่มดูแผนที่ของแต่ละใบงาน ส่วนหน้า `/rider` ดูเส้นทางทั้งหมดหรือเลือกนำทางไปทีละจุดได้ โดยไม่เปิด Google Maps
+
+- ใช้ Leaflet แสดงแผนที่ OpenStreetMap และเรียก OSRM Route API เพื่อวาดเส้นทางตามถนนตามลำดับจุดส่งเดิม
+- ปุ่มเริ่มนำทางขออนุญาตตำแหน่งจาก Browser แสดงตำแหน่งปัจจุบัน และคำนวณเส้นใหม่เมื่อเคลื่อนที่เกิน 40 เมตร โดยเว้นอย่างน้อย 15 วินาทีระหว่างการคำนวณ
+- GPS ต้องใช้ HTTPS หรือ localhost และต้องเปิดหน้าจอเว็บไว้ การเปลี่ยนจุดส่งจะหยุด GPS ให้กดเริ่มนำทางอีกครั้ง
+- มีคำแนะนำตามเส้นทางเป็นข้อความ ยังไม่มีเสียงนำทางหรือการยืนยันส่งอัตโนมัติ
+- ใช้บริการสาธารณะ `https://router.project-osrm.org` แบบ driving ซึ่งเป็นโปรไฟล์รถยนต์ ไม่ใช่เส้นทางเฉพาะรถจักรยานยนต์ ไม่มีข้อมูลจราจรสด และบริการอาจไม่พร้อมใช้งาน หากคำนวณไม่ได้จะแสดงข้อผิดพลาดโดยไม่วาดเส้นตรงแทน
+- พิกัดร้าน จุดส่ง และตำแหน่ง GPS ขณะนำทางจะส่งไปยัง OSRM เพื่อคำนวณเส้นทาง ส่วนแผนที่พื้นหลังโหลดจาก OpenStreetMap
+- ตัวเลขระยะทางและเวลาที่แสดงบนแผนที่เป็นผลจาก OSRM ส่วนค่าส่ง กำไร และเวลาถึงในใบงานยังเป็นข้อมูลแผนจาก Backend

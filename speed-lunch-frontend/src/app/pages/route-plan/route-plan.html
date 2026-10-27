@@ -1,6 +1,12 @@
-<div class="mb-4 flex flex-col items-stretch justify-between gap-3 rounded-t-xl border-b-4 border-[#183b78] bg-[#d71920] px-5 py-4 text-white shadow-sm sm:flex-row sm:items-center">
+<div
+  class="mb-4 flex flex-col items-stretch justify-between gap-3 rounded-t-xl border-b-4 border-[#183b78] bg-[#d71920] px-5 py-4 text-white shadow-sm sm:flex-row sm:items-center"
+>
   <h1 class="text-2xl font-bold">จัดเส้นทางส่งอาหาร</h1>
-  <button class="btn btn-primary btn-lg border-0 bg-white text-[#183b78] hover:bg-red-50" (click)="calculate()" [disabled]="loading()">
+  <button
+    class="btn btn-primary btn-lg border-0 bg-white text-[#183b78] hover:bg-red-50"
+    (click)="calculate()"
+    [disabled]="loading()"
+  >
     @if (loading()) {
       <span class="loading loading-spinner"></span> กำลังคำนวณ...
     } @else {
@@ -10,14 +16,20 @@
 </div>
 
 @if (message()) {
-  <div class="alert alert-error mb-4 rounded-xl shadow-sm"><span>{{ message() }}</span></div>
+  <div class="alert alert-error mb-4 rounded-xl shadow-sm">
+    <span>{{ message() }}</span>
+  </div>
 }
 
 @if (plan()) {
-  <div class="stats stats-vertical mb-4 w-full rounded-xl border border-base-200 bg-base-100 shadow-sm md:stats-horizontal">
+  <div
+    class="stats stats-vertical mb-4 w-full rounded-xl border border-base-200 bg-base-100 shadow-sm md:stats-horizontal"
+  >
     <div class="stat border-l-4 border-[#d71920]">
       <div class="stat-title">ไรเดอร์ / ออเดอร์ / กล่อง</div>
-      <div class="stat-value text-2xl text-[#183b78]">{{ plan()!.rider_count }} / {{ plan()!.total_orders }} / {{ plan()!.total_boxes }}</div>
+      <div class="stat-value text-2xl text-[#183b78]">
+        {{ plan()!.rider_count }} / {{ plan()!.total_orders }} / {{ plan()!.total_boxes }}
+      </div>
       <div class="stat-desc">ระยะทางรวม {{ plan()!.distance_km }} กม.</div>
     </div>
     <div class="stat border-l-4 border-[#183b78]">
@@ -37,7 +49,9 @@
       } @else {
         <div class="stat-value text-2xl text-error">{{ plan()!.profit }} ฿ (ขาดทุน)</div>
       }
-      <div class="stat-desc">แผนครั้งที่ {{ plan()!.revision }} ของวันที่ {{ plan()!.delivery_date }}</div>
+      <div class="stat-desc">
+        แผนครั้งที่ {{ plan()!.revision }} ของวันที่ {{ plan()!.delivery_date }}
+      </div>
     </div>
     <div class="stat border-l-4 border-[#183b78]">
       <div class="stat-title">ส่งถึงคนสุดท้าย</div>
@@ -51,30 +65,63 @@
   </div>
 
   <div class="alert alert-info mb-4 rounded-xl border border-blue-200 shadow-sm">
-    <span>ดูเส้นทางของไรเดอร์แต่ละคนได้จากปุ่ม “เปิดใน Google Maps”</span>
+    <span>กด “ดูแผนที่เส้นทาง” เพื่อดูเส้นทางตามถนนของแต่ละใบงานในเว็บ</span>
   </div>
+
+  @if (selectedRoute(); as route) {
+    <section
+      id="plan-road-map"
+      class="mb-4 overflow-hidden rounded-xl border border-base-200 bg-white"
+    >
+      <div class="flex justify-between items-center p-4">
+        <h2 class="font-bold">{{ route.rider_name }} · {{ route.job_code }}</h2>
+        <button class="btn btn-sm" (click)="selectedRoute.set(undefined)">ปิดแผนที่</button>
+      </div>
+      <app-road-map [job]="route" />
+      <p class="p-3 text-sm text-base-content/60">
+        ระยะทางและเวลาบนแผนที่เป็นค่าตามถนน ส่วนยอดค่าส่งและกำไรด้านบนยังใช้ค่าที่บันทึกในแผน
+      </p>
+    </section>
+  }
 
   <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
     @for (route of plan()!.routes; track route.route_id) {
-      <div class="card rounded-xl border border-base-200 border-l-8 bg-base-100 shadow-sm" [style.border-color]="color(route.rider_number)">
+      <div
+        class="card rounded-xl border border-base-200 border-l-8 bg-base-100 shadow-sm"
+        [style.border-color]="color(route.rider_number)"
+      >
         <div class="card-body">
           <div class="flex flex-row items-center justify-between gap-3">
             <h2 class="card-title text-[#183b78]">
-              <span class="badge text-white" [style.background-color]="color(route.rider_number)">คนที่ {{ route.rider_number }}</span>
+              <span class="badge text-white" [style.background-color]="color(route.rider_number)"
+                >คนที่ {{ route.rider_number }}</span
+              >
               {{ route.rider_name }}
             </h2>
-            <a class="link link-primary font-semibold" [routerLink]="['/rider', route.job_code]">{{ route.job_code }}</a>
+            <a class="link link-primary font-semibold" [routerLink]="['/rider', route.job_code]">{{
+              route.job_code
+            }}</a>
           </div>
           <p class="text-sm text-base-content/70">
-            {{ route.total_boxes }} กล่อง · {{ route.distance_km }} กม. · {{ route.duration_minutes }} นาที · ค่าส่ง {{ route.delivery_cost }} ฿
+            {{ route.total_boxes }} กล่อง · {{ route.distance_km }} กม. ·
+            {{ route.duration_minutes }} นาที · ค่าส่ง {{ route.delivery_cost }} ฿
           </p>
           <ol class="list-inside list-decimal space-y-2 rounded-lg bg-base-200/50 p-4">
             @for (stop of route.stops; track stop.stop_id) {
-              <li>{{ stop.customer_name }} ({{ stop.quantity }} กล่อง) ถึง {{ time(stop.arrival_time) }} น.</li>
+              <li>
+                {{ stop.customer_name }} ({{ stop.quantity }} กล่อง) ถึง
+                {{ time(stop.arrival_time) }} น.
+              </li>
             }
           </ol>
           <div class="card-actions justify-end">
-            <button type="button" class="btn btn-sm btn-outline border-[#183b78] text-[#183b78] hover:bg-[#183b78] hover:text-white">เปิดใน Google Maps</button>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline border-[#183b78] text-[#183b78] hover:bg-[#183b78] hover:text-white"
+              (click)="openMap(route)"
+            >
+              ดูแผนที่เส้นทาง
+            </button>
           </div>
         </div>
       </div>
@@ -84,8 +131,14 @@
   <div class="card rounded-xl border border-base-200 bg-base-100 shadow-sm">
     <div class="card-body items-center px-6 py-12 text-center sm:py-16">
       <h2 class="text-xl font-semibold text-[#183b78]">วันนี้ยังไม่ได้จัดเส้นทาง</h2>
-      <p class="mt-1 max-w-lg text-sm text-base-content/60">เมื่อออเดอร์พร้อมส่ง กดปุ่ม “จัดเส้นทาง” ด้านบนเพื่อคำนวณใบงานของไรเดอร์สำหรับรอบ 11:30 น.</p>
-      <div class="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">ระบบจะจัดลำดับจุดส่งและคำนวณเวลาเดินทางให้แต่ละใบงาน</div>
+      <p class="mt-1 max-w-lg text-sm text-base-content/60">
+        เมื่อออเดอร์พร้อมส่ง กดปุ่ม “จัดเส้นทาง” ด้านบนเพื่อคำนวณใบงานของไรเดอร์สำหรับรอบ 11:30 น.
+      </p>
+      <div
+        class="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+      >
+        ระบบจะจัดลำดับจุดส่งและคำนวณเวลาเดินทางให้แต่ละใบงาน
+      </div>
     </div>
   </div>
 }
