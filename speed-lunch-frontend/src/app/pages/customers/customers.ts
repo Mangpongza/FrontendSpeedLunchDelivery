@@ -65,8 +65,10 @@ export class Customers {
     }
     this.isLoading.set(true);
     try {
-      // ค้นหาทั้งในช่องชื่อและเบอร์
-      const res = await this.customerApi.searchCustomers(kw, kw);
+      const isPhone = /^[0-9\s-]+$/.test(kw);
+      const res = isPhone
+        ? await this.customerApi.searchCustomers(undefined, kw)
+        : await this.customerApi.searchCustomers(kw);
       this.customers.set(res);
       this.activeFilter.set('search');
       this.showMessage(`พบผลการค้นหา "${kw}": ${res.length} คน`);
