@@ -70,6 +70,22 @@ export class Orders {
     }
   }
 
+  onKeywordChange(value: string) {
+    this.keyword.set(value);
+    const matches = this.filteredCustomers();
+    if (matches.length === 1) this.customerId.set(matches[0].id);
+  }
+
+  searchCustomer() {
+    const first = this.filteredCustomers()[0];
+    if (!first) {
+      this.showError({ error: { error: 'ไม่พบลูกค้าที่ค้นหา' } });
+      return;
+    }
+    this.customerId.set(first.id);
+    this.message.set('');
+  }
+
   async addOrder() {
     if (this.saving()) return;
     const customer = this.selectedCustomer();

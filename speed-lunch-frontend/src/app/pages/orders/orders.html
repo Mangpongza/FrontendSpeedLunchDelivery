@@ -39,12 +39,24 @@
 
       <fieldset class="fieldset">
         <legend class="fieldset-legend">เลือกลูกค้า</legend>
-        <input
-          class="input w-full"
-          placeholder="ค้นชื่อหรือเบอร์โทร"
-          aria-label="ค้นหาลูกค้า"
-          [(ngModel)]="keyword"
-        />
+        <div class="flex flex-row gap-2">
+          <input
+            class="input w-full"
+            placeholder="ค้นชื่อหรือเบอร์โทร"
+            aria-label="ค้นหาลูกค้า"
+            [ngModel]="keyword()"
+            (ngModelChange)="onKeywordChange($event)"
+            (keyup.enter)="searchCustomer()"
+          />
+          <button
+            type="button"
+            class="btn border-[#183b78] bg-[#183b78] text-white hover:border-[#102c60] hover:bg-[#102c60]"
+            (click)="searchCustomer()"
+            [disabled]="loadingCustomers()"
+          >
+            ค้นหา
+          </button>
+        </div>
         <select
           class="select w-full"
           aria-label="เลือกลูกค้า"
